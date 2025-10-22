@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
 import 'NavBar.dart';
 
+/// MainScaffold is a reusable widget that provides a consistent layout
+/// for screens in the app, including a NavBar at the top and a Drawer menu.
+/// It accepts a `body` widget to display the main content of each screen.
 class MainScaffold extends StatelessWidget {
-  final Widget body;
-  final String title;
+  final Widget body; // The main content of the screen
+  final String title; // Title displayed in the Drawer header
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  // Key to control the Scaffold (needed to open the drawer from NavBar)
 
   MainScaffold({super.key, required this.body, this.title = 'HOWRU.LIFE'});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: const Color(0xFF708694),
+      key: _scaffoldKey, // Assigns the key so NavBar can control drawer
+      backgroundColor: const Color(0xFF708694), // Background color of the screen
 
+      // NavBar at the top of the screen
       appBar: NavBar(scaffoldKey: _scaffoldKey),
 
+      // Drawer menu that slides from the left
       drawer: Drawer(
         backgroundColor: const Color(0xFF708694),
         child: ListView(
-          padding: EdgeInsets.zero,
+          padding: EdgeInsets.zero, // Remove default padding at top
           children: [
+            // Drawer header containing the logo and app title
             DrawerHeader(
               decoration: const BoxDecoration(
                 color: Color(0xFF546E7A),
@@ -29,13 +36,13 @@ class MainScaffold extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
-                    'assets/logo.png',
+                    'assets/logo.png', // App logo
                     width: 80,
                     height: 80,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 8), // Space between logo and title
                   Text(
-                    title,
+                    title, // App name
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 20,
@@ -45,6 +52,8 @@ class MainScaffold extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Drawer menu items
             _drawerItem(
               icon: Icons.dashboard,
               label: 'Dashboard',
@@ -79,11 +88,12 @@ class MainScaffold extends StatelessWidget {
         ),
       ),
 
+      // The main body content of the screen
       body: body,
     );
   }
 
-  // Drawer item builder for cleaner code
+  /// Helper method to create a Drawer item with icon, label, and tap behavior
   Widget _drawerItem({
     required IconData icon,
     required String label,
@@ -91,16 +101,15 @@ class MainScaffold extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      leading: Icon(icon, color: Colors.white),
-      title: Text(label, style: const TextStyle(color: Colors.white)),
-      onTap: onTap,
+      leading: Icon(icon, color: Colors.white), // Icon displayed at start
+      title: Text(label, style: const TextStyle(color: Colors.white)), // Label text
+      onTap: onTap, // Action when tapped
     );
   }
 
+  /// Navigates to a named route and closes the drawer first
   void _navigateTo(BuildContext context, String route) {
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Navigate to $route (placeholder)')),
-    );
+    Navigator.pop(context); // Close the drawer
+    Navigator.pushNamed(context, route); // Navigate to the specified route
   }
 }
