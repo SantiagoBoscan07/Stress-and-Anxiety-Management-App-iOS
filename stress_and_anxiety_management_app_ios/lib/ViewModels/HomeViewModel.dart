@@ -29,4 +29,13 @@ class HomeViewModel {
       ),
     ];
   }
+
+  List<Map<String, dynamic>> getMenuItems() {
+    return [
+      {'icon': Icons.dashboard, 'label': 'Dashboard'},
+      {'icon': Icons.help, 'label': 'Awareness Questions'},
+      {'icon': Icons.fitness_center, 'label': 'Immediate Exercises'},
+      {'icon': Icons.calendar_today, 'label': 'Monthly Calendar'},
+    ];
+  }
 }

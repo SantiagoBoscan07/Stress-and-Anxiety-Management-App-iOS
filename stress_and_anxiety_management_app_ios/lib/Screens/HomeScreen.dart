@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import '../ViewModels/HomeViewModel.dart';
+import '../Components/MainScaffold.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = HomeViewModel(); // initialize viewmodel
+    final viewModel = HomeViewModel();
 
-    return Scaffold(
-      backgroundColor: const Color(0xFF708694),
-      appBar: AppBar(
-        title: const Text('Home'),
-        centerTitle: true,
-      ),
+    return MainScaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -27,7 +23,8 @@ class HomeScreen extends StatelessWidget {
             Card(
               color: Colors.blueGrey[700],
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: const Padding(
                 padding: EdgeInsets.all(16),
                 child: Text(
@@ -38,9 +35,7 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Column(
-              children: viewModel.getButtons(),
-            ),
+            Column(children: viewModel.getButtons()),
           ],
         ),
       ),
