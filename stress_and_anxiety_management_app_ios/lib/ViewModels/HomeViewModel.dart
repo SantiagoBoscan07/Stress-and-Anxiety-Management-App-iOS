@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../Components/ActionButton.dart';
+import '../Screens/SelfReflectionScreen.dart';
 
 class HomeViewModel {
-  List<Widget> getButtons() {
+  List<Widget> getButtons(BuildContext context) {
     return [
       ActionButton(
         label: 'Dashboard',
@@ -13,7 +14,16 @@ class HomeViewModel {
       ActionButton(
         label: 'Awareness Questions',
         icon: Icons.help,
-        onPressed: () {},
+        onPressed: ()
+        {
+          // Navigate to SelfReflectScreen
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const SelfReflectScreen(),
+            ),
+          );
+        },
       ),
       const SizedBox(height: 12),
       ActionButton(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../ViewModels/HomeViewModel.dart';
 import '../Components/MainScaffold.dart';
 
+
 /// HomeScreen is the main landing page of the app.
 /// It displays the logo, a welcome message, and a list of action buttons.
 class HomeScreen extends StatelessWidget {
@@ -50,7 +51,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 24), // Space between card and buttons
 
             // Display the list of action buttons from the ViewModel
-            Column(children: viewModel.getButtons()),
+            Column(children: viewModel.getButtons(context)),
           ],
         ),
       ),
