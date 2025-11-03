@@ -4,6 +4,7 @@ import '../Screens/AboutScreen.dart';
 
 /// Entry point of the Flutter application
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp()); // Runs the root widget of the app
 }
 

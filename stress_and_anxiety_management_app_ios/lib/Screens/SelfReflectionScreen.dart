@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Components/QuestionCard.dart';
+import '../Database/LocalDatabase.dart'; // import the DatabaseHelper we created
 
 class SelfReflectScreen extends StatefulWidget {
   const SelfReflectScreen({super.key});
@@ -42,12 +43,14 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
   String? whoValue, whatValue, whenValue, whereValue, whyValue;
 
+  final DatabaseHelper dbHelper = DatabaseHelper();
+
   String? validateSelection(String? value, List<String> options) {
     if (value == null || value == options[0]) return 'Please select a question';
     return null;
   }
 
-  void saveReflection() {
+  Future<void> saveReflection() async {
     final errors = [
       validateSelection(whoValue, whoOptions),
       validateSelection(whatValue, whatOptions),
@@ -67,14 +70,14 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
       return;
     }
 
-    // Here, integrate Firebase Firestore or any backend
-    print({
-      "who": whoValue,
-      "what": whatValue,
-      "when": whenValue,
-      "where": whereValue,
-      "why": whyValue,
-    });
+    // Save the reflection as a single row in the database
+    await dbHelper.insertReflection(
+      who: whoValue!,
+      what: whatValue!,
+      when: whenValue!,
+      where: whereValue!,
+      why: whyValue!,
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -82,15 +85,33 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         backgroundColor: Colors.green,
       ),
     );
+
+    print("Saved reflection to database:");
+    print({
+      "who": whoValue,
+      "what": whatValue,
+      "when": whenValue,
+      "where": whereValue,
+      "why": whyValue,
+    });
+  }
+
+  Future<void> showSavedReflections() async {
+    final reflections = await dbHelper.getReflections();
+    print("All saved reflections:");
+    for (var r in reflections) {
+      print(
+          "${r['id']}: Who: ${r['who']}, What: ${r['what']}, When: ${r['when_question']}, Where: ${r['where_question']}, Why: ${r['why_question']}, CreatedAt: ${r['createdAt']}");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF2F3941), // match other screens
+      backgroundColor: const Color(0xFF2F3941),
       appBar: AppBar(
         title: const Text("Self-Reflection"),
-        backgroundColor: const Color(0xFF2F3941), // consistent app bar
+        backgroundColor: const Color(0xFF2F3941),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -133,20 +154,40 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
-              child: ElevatedButton.icon(
-                onPressed: saveReflection,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF556874), // consistent button
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              child: Column(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: saveReflection,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF556874),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.check, color: Colors.white),
+                    label: const Text(
+                      "Save Reflection",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
                   ),
-                ),
-                icon: const Icon(Icons.check, color: Colors.white),
-                label: const Text(
-                  "Save Reflection",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                  const SizedBox(height: 12),
+                  ElevatedButton.icon(
+                    onPressed: showSavedReflections,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF556874),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.list, color: Colors.white),
+                    label: const Text(
+                      "Show Saved Reflections",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 24),
