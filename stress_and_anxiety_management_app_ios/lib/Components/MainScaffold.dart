@@ -79,6 +79,12 @@ class MainScaffold extends StatelessWidget {
               onTap: () => _navigateTo(context, '/about'),
             ),
             _drawerItem(
+              icon: Icons.question_mark,
+              label: 'Frequently Asked Questions',
+              context: context,
+              onTap: () => _navigateTo(context, '/faq'),
+            ),
+            _drawerItem(
               icon: Icons.logout,
               label: 'Logout',
               context: context,

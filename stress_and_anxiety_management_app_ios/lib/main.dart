@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Screens/HomeScreen.dart';
 import '../Screens/AboutScreen.dart';
+import '../Screens/FaqScreen.dart';
 
 /// Entry point of the Flutter application
 void main() {
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
+        '/faq': (context) => const FaqScreen(), // FAQ Screen
         // Placeholder screens for features not implemented yet
         '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
