@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Components/QuestionCard.dart';
-import '../Database/LocalDatabase.dart'; // import the DatabaseHelper we created
+import '../Database/LocalDatabase.dart'; // DatabaseHelper
 
 class SelfReflectScreen extends StatefulWidget {
   const SelfReflectScreen({super.key});
@@ -45,6 +45,26 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
   final DatabaseHelper dbHelper = DatabaseHelper();
 
+  @override
+  void initState() {
+    super.initState();
+    _loadLastReflection();
+  }
+
+  Future<void> _loadLastReflection() async {
+    final reflections = await dbHelper.getReflections();
+    if (reflections.isNotEmpty) {
+      final last = reflections.first; // latest reflection
+      setState(() {
+        whoValue = last['who'];
+        whatValue = last['what'];
+        whenValue = last['when_question'];
+        whereValue = last['where_question'];
+        whyValue = last['why_question'];
+      });
+    }
+  }
+
   String? validateSelection(String? value, List<String> options) {
     if (value == null || value == options[0]) return 'Please select a question';
     return null;
@@ -70,7 +90,6 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
       return;
     }
 
-    // Save the reflection as a single row in the database
     await dbHelper.insertReflection(
       who: whoValue!,
       what: whatValue!,
@@ -85,24 +104,23 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         backgroundColor: Colors.green,
       ),
     );
-
-    print("Saved reflection to database:");
-    print({
-      "who": whoValue,
-      "what": whatValue,
-      "when": whenValue,
-      "where": whereValue,
-      "why": whyValue,
-    });
   }
 
-  Future<void> showSavedReflections() async {
-    final reflections = await dbHelper.getReflections();
-    print("All saved reflections:");
-    for (var r in reflections) {
-      print(
-          "${r['id']}: Who: ${r['who']}, What: ${r['what']}, When: ${r['when_question']}, Where: ${r['where_question']}, Why: ${r['why_question']}, CreatedAt: ${r['createdAt']}");
-    }
+  Future<void> deleteAllReflections() async {
+    await dbHelper.clearReflections();
+    setState(() {
+      whoValue = whoOptions[0];
+      whatValue = whatOptions[0];
+      whenValue = whenOptions[0];
+      whereValue = whereOptions[0];
+      whyValue = whyOptions[0];
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("All reflections deleted."),
+        backgroundColor: Colors.red,
+      ),
+    );
   }
 
   @override
@@ -173,17 +191,17 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: showSavedReflections,
+                    onPressed: deleteAllReflections,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF556874),
+                      backgroundColor: const Color(0xFFB00020),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    icon: const Icon(Icons.list, color: Colors.white),
+                    icon: const Icon(Icons.delete, color: Colors.white),
                     label: const Text(
-                      "Show Saved Reflections",
+                      "Delete All Reflections",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
