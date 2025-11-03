@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../Components/ActionButton.dart';
+import '../Screens/CalendarScreen.dart';
+import '../Screens/CalendarScreenWithCallback.dart';
 import '../Screens/SelfReflectionScreen.dart';
 
 class HomeViewModel {
@@ -14,13 +16,23 @@ class HomeViewModel {
       ActionButton(
         label: 'Awareness Questions',
         icon: Icons.help,
-        onPressed: ()
-        {
-          // Navigate to SelfReflectScreen
+        onPressed: () {
+          // Navigate to CalendarScreen first
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => const SelfReflectScreen(),
+              builder: (context) => CalendarScreenWithCallback(
+                onDateSelected: (selectedDate) {
+                  // After selecting a date, navigate to SelfReflectScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          SelfReflectScreen(selectedDate: selectedDate),
+                    ),
+                  );
+                },
+              ),
             ),
           );
         },
@@ -35,7 +47,14 @@ class HomeViewModel {
       ActionButton(
         label: 'Monthly Calendar',
         icon: Icons.calendar_today,
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CalendarScreen(),
+            ),
+          );
+        },
       ),
     ];
   }

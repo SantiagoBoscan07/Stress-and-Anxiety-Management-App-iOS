@@ -22,11 +22,13 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2, // incremented version to include 'date'
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
   }
 
+  // Create table with 'date' column
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE reflections(
@@ -36,10 +38,19 @@ class DatabaseHelper {
         when_question TEXT NOT NULL,
         where_question TEXT NOT NULL,
         why_question TEXT NOT NULL,
+        date TEXT NOT NULL,
         createdAt TEXT NOT NULL
       )
     ''');
     print('Database and table created!');
+  }
+
+  // Upgrade existing database to add 'date' column if missing
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
+      print('Database upgraded: Added "date" column.');
+    }
   }
 
   // Insert a reflection
@@ -49,6 +60,7 @@ class DatabaseHelper {
     required String when,
     required String where,
     required String why,
+    required DateTime date,
   }) async {
     final db = await database;
     return await db.insert(
@@ -59,8 +71,10 @@ class DatabaseHelper {
         'when_question': when,
         'where_question': where,
         'why_question': why,
+        'date': date.toIso8601String(),
         'createdAt': DateTime.now().toIso8601String(),
       },
+      conflictAlgorithm: ConflictAlgorithm.replace, // optional
     );
   }
 
@@ -70,13 +84,30 @@ class DatabaseHelper {
     return await db.query('reflections', orderBy: 'createdAt DESC');
   }
 
-  // Delete a reflection by id
-  Future<int> deleteReflection(int id) async {
+  // Get reflections by specific date
+  Future<List<Map<String, dynamic>>> getReflectionsByDate(DateTime date) async {
     final db = await database;
-    return await db.delete('reflections', where: 'id = ?', whereArgs: [id]);
+    String isoDate = date.toIso8601String().substring(0, 10); // keep only YYYY-MM-DD
+    return await db.query(
+      'reflections',
+      where: 'date LIKE ?',
+      whereArgs: ['$isoDate%'],
+      orderBy: 'createdAt DESC',
+    );
   }
 
-  // Optional: clear all reflections
+  // Delete a reflection by Date
+  Future<int> deleteReflectionsByDate(DateTime date) async {
+    final db = await database;
+    String isoDate = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
+    return await db.delete(
+      'reflections',
+      where: 'date LIKE ?',
+      whereArgs: ['$isoDate%'],
+    );
+  }
+
+  // Clear all reflections
   Future<int> clearReflections() async {
     final db = await database;
     return await db.delete('reflections');

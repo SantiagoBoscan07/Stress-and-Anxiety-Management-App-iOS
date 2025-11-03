@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import '../Components/QuestionCard.dart';
-import '../Database/LocalDatabase.dart'; // DatabaseHelper
+import '../Database/LocalDatabase.dart';
 
 class SelfReflectScreen extends StatefulWidget {
-  const SelfReflectScreen({super.key});
+  final DateTime selectedDate;
+
+  const SelfReflectScreen({super.key, required this.selectedDate});
 
   @override
   State<SelfReflectScreen> createState() => _SelfReflectScreenState();
@@ -42,25 +44,24 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
   ];
 
   String? whoValue, whatValue, whenValue, whereValue, whyValue;
-
   final DatabaseHelper dbHelper = DatabaseHelper();
 
   @override
   void initState() {
     super.initState();
-    _loadLastReflection();
+    _loadReflectionForDate(widget.selectedDate);
   }
 
-  Future<void> _loadLastReflection() async {
-    final reflections = await dbHelper.getReflections();
+  Future<void> _loadReflectionForDate(DateTime date) async {
+    final reflections = await dbHelper.getReflectionsByDate(date);
     if (reflections.isNotEmpty) {
-      final last = reflections.first; // latest reflection
+      final entry = reflections.first;
       setState(() {
-        whoValue = last['who'];
-        whatValue = last['what'];
-        whenValue = last['when_question'];
-        whereValue = last['where_question'];
-        whyValue = last['why_question'];
+        whoValue = entry['who'];
+        whatValue = entry['what'];
+        whenValue = entry['when_question'];
+        whereValue = entry['where_question'];
+        whyValue = entry['why_question'];
       });
     }
   }
@@ -71,16 +72,8 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
   }
 
   Future<void> saveReflection() async {
-    final errors = [
-      validateSelection(whoValue, whoOptions),
-      validateSelection(whatValue, whatOptions),
-      validateSelection(whenValue, whenOptions),
-      validateSelection(whereValue, whereOptions),
-      validateSelection(whyValue, whyOptions),
-    ];
-
-    if (errors.any((e) => e != null)) {
-      setState(() {});
+    if ([whoValue, whatValue, whenValue, whereValue, whyValue]
+        .any((v) => v == null || v.isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Please answer all questions!"),
@@ -96,6 +89,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
       when: whenValue!,
       where: whereValue!,
       why: whyValue!,
+      date: widget.selectedDate,
     );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -106,8 +100,9 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
     );
   }
 
-  Future<void> deleteAllReflections() async {
-    await dbHelper.clearReflections();
+  // Delete only reflections for the selected date
+  Future<void> deleteReflectionsForSelectedDate() async {
+    await dbHelper.deleteReflectionsByDate(widget.selectedDate);
     setState(() {
       whoValue = whoOptions[0];
       whatValue = whatOptions[0];
@@ -117,7 +112,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text("All reflections deleted."),
+        content: Text("Reflections for selected date deleted."),
         backgroundColor: Colors.red,
       ),
     );
@@ -129,7 +124,15 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
       backgroundColor: const Color(0xFF2F3941),
       appBar: AppBar(
         title: const Text("Self-Reflection"),
-        backgroundColor: const Color(0xFF2F3941),
+        backgroundColor: const Color(0xFF546E7A), // AppBar background color
+        centerTitle: true,
+        titleTextStyle: const TextStyle(
+          color: Colors.white, // <-- set AppBar title text to white
+          fontSize: 20,
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.white, // Back arrow white
+        ),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -191,7 +194,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton.icon(
-                    onPressed: deleteAllReflections,
+                    onPressed: deleteReflectionsForSelectedDate,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFB00020),
                       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -201,7 +204,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                     ),
                     icon: const Icon(Icons.delete, color: Colors.white),
                     label: const Text(
-                      "Delete All Reflections",
+                      "Delete Reflection for Date",
                       style: TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ),
