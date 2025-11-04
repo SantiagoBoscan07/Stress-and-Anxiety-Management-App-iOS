@@ -33,6 +33,7 @@ class FaqScreen extends StatelessWidget {
         title: const Text("FAQ"),
         backgroundColor: const Color(0xFF5D727C),
         foregroundColor: Colors.white,
+        centerTitle: true,
       ),
       body: ListView.builder(
         padding: const EdgeInsets.all(16),

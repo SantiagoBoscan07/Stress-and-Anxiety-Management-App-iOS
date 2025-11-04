@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,9 +11,13 @@ class DatabaseHelper {
 
   static Database? _database;
 
+  // --- ValueNotifier to notify username changes ---
+  final ValueNotifier<String?> userNameNotifier = ValueNotifier(null);
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+    await _loadUserNameNotifier(); // initialize the notifier
     return _database!;
   }
 
@@ -22,13 +27,12 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // incremented version to include 'date'
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
-  // Create table with 'date' column
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE reflections(
@@ -42,18 +46,56 @@ class DatabaseHelper {
         createdAt TEXT NOT NULL
       )
     ''');
-    print('Database and table created!');
+
+    await db.execute('''
+      CREATE TABLE user(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT
+      )
+    ''');
   }
 
-  // Upgrade existing database to add 'date' column if missing
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
-      print('Database upgraded: Added "date" column.');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE user(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT
+        )
+      ''');
     }
   }
 
-  // Insert a reflection
+  // --- User methods ---
+  Future<int> saveUserName(String name) async {
+    final db = await database;
+    await db.delete('user'); // keep only one user
+    final id = await db.insert('user', {'name': name});
+    userNameNotifier.value = name; // notify listeners immediately
+    return id;
+  }
+
+  Future<String?> getUserName() async {
+    final db = await database;
+    final result = await db.query('user', limit: 1);
+    if (result.isNotEmpty) return result.first['name'] as String?;
+    return null;
+  }
+
+  Future<void> deleteUserName() async {
+    final db = await database;
+    await db.delete('user');
+    userNameNotifier.value = null; // notify listeners immediately
+  }
+
+  Future<void> _loadUserNameNotifier() async {
+    userNameNotifier.value = await getUserName();
+  }
+
+  // --- Keep your existing reflection methods as-is ---
   Future<int> insertReflection({
     required String who,
     required String what,
@@ -74,20 +116,28 @@ class DatabaseHelper {
         'date': date.toIso8601String(),
         'createdAt': DateTime.now().toIso8601String(),
       },
-      conflictAlgorithm: ConflictAlgorithm.replace, // optional
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Get all reflections
+  Future<int> clearReflections() async {
+    final db = await database;
+    return await db.delete('reflections');
+  }
+
+  Future<void> deleteAllData() async {
+    await clearReflections();
+    await deleteUserName();
+  }
+
   Future<List<Map<String, dynamic>>> getReflections() async {
     final db = await database;
     return await db.query('reflections', orderBy: 'createdAt DESC');
   }
 
-  // Get reflections by specific date
   Future<List<Map<String, dynamic>>> getReflectionsByDate(DateTime date) async {
     final db = await database;
-    String isoDate = date.toIso8601String().substring(0, 10); // keep only YYYY-MM-DD
+    String isoDate = date.toIso8601String().substring(0, 10);
     return await db.query(
       'reflections',
       where: 'date LIKE ?',
@@ -96,20 +146,13 @@ class DatabaseHelper {
     );
   }
 
-  // Delete a reflection by Date
   Future<int> deleteReflectionsByDate(DateTime date) async {
     final db = await database;
-    String isoDate = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
+    String isoDate = date.toIso8601String().substring(0, 10);
     return await db.delete(
       'reflections',
       where: 'date LIKE ?',
       whereArgs: ['$isoDate%'],
     );
-  }
-
-  // Clear all reflections
-  Future<int> clearReflections() async {
-    final db = await database;
-    return await db.delete('reflections');
   }
 }

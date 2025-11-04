@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Screens/HomeScreen.dart';
 import '../Screens/AboutScreen.dart';
 import '../Screens/FaqScreen.dart';
+import '../Screens/SettingScreen.dart';
 
 /// Entry point of the Flutter application
 void main() {
@@ -30,10 +31,10 @@ class MyApp extends StatelessWidget {
         '/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
         '/faq': (context) => const FaqScreen(), // FAQ Screen
+        '/settings': (context) => const SettingScreen(),
         // Placeholder screens for features not implemented yet
         '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
-        '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
         '/logout': (context) => const PlaceholderScreen(title: 'Logout'),
       },
     );
