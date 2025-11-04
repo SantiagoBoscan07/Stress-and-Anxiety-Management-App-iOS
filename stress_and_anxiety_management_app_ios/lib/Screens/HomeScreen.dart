@@ -2,56 +2,62 @@ import 'package:flutter/material.dart';
 import '../ViewModels/HomeViewModel.dart';
 import '../Components/MainScaffold.dart';
 
-
-/// HomeScreen is the main landing page of the app.
-/// It displays the logo, a welcome message, and a list of action buttons.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Initialize the HomeViewModel which provides the list of action buttons
     final viewModel = HomeViewModel();
+    double screenWidth = MediaQuery.of(context).size.width;
 
-    // MainScaffold is a reusable layout that already includes
-    // the top NavBar and side Drawer with menu items
     return MainScaffold(
       body: SingleChildScrollView(
-        // Allows the content to scroll if the screen is small
         padding: const EdgeInsets.all(16),
         child: Column(
-          // Column stacks widgets vertically
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // App logo at the top
+            // Responsive app logo
             Image.asset(
               'assets/logo.png',
-              width: 200,
-              height: 180,
+              width: screenWidth * 0.5, // 50% of screen width
+              height: screenWidth * 0.45, // proportional height
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 24), // Space between logo and card
+            const SizedBox(height: 24),
 
-            // Welcome message displayed in a styled Card
+            // Welcome message
             Card(
-              color: Colors.blueGrey[700], // Dark card background
+              color: Colors.blueGrey[700],
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16), // Rounded corners
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Padding(
-                padding: EdgeInsets.all(16), // Inner spacing for text
+                padding: EdgeInsets.all(16),
                 child: Text(
                   'Welcome User, what would you like to do?',
-                  textAlign: TextAlign.center, // Centered text
+                  textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: Colors.white, // White text for contrast
-                    fontSize: 18, // Slightly larger font for readability
+                    color: Colors.white,
+                    fontSize: 18,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 24), // Space between card and buttons
+            const SizedBox(height: 24),
 
-            // Display the list of action buttons from the ViewModel
-            Column(children: viewModel.getButtons(context)),
+            // Action buttons - wrap in a Column to ensure vertical stacking
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: viewModel.getButtons(context).map((button) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: double.infinity, // button fills available width
+                    child: button,
+                  ),
+                );
+              }).toList(),
+            ),
           ],
         ),
       ),

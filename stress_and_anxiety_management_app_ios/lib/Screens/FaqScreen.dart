@@ -25,6 +25,8 @@ class FaqScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: const Color(0xFF2E3A40),
       appBar: AppBar(
@@ -36,7 +38,10 @@ class FaqScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         itemCount: faqList.length,
         itemBuilder: (context, index) {
-          return FaqCard(faqItem: faqList[index]);
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: screenWidth),
+            child: FaqCard(faqItem: faqList[index]),
+          );
         },
       ),
     );
