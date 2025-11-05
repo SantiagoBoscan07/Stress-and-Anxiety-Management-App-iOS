@@ -42,6 +42,15 @@ class DatabaseHelper {
         createdAt TEXT NOT NULL
       )
     ''');
+
+    await db.execute('''
+      CREATE TABLE users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+      )
+    ''');
+
     print('Database and table created!');
   }
 
@@ -111,5 +120,38 @@ class DatabaseHelper {
   Future<int> clearReflections() async {
     final db = await database;
     return await db.delete('reflections');
+  }
+
+  // USER AUTHENTICATION LOGIC
+  // Insert new user
+  Future<int> insertUser(String email, String password) async {
+    final db = await database;
+    return await db.insert(
+      'users',
+      {'email': email, 'password': password},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Get user for login validation
+  Future<Map<String, dynamic>?> getUser(String email, String password) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  // Check if email already exists 
+  Future<bool> emailExists(String email) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    return result.isNotEmpty;
   }
 }

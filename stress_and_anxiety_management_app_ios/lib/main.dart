@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../Screens/HomeScreen.dart';
 import '../Screens/AboutScreen.dart';
 
+
 /// Entry point of the Flutter application
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,8 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
         '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
+        '/login': (context) => const PlaceholderScreen(title: 'Login'),
+        '/signup': (context) => const PlaceholderScreen(title: 'Signup'),
         '/logout': (context) => const PlaceholderScreen(title: 'Logout'),
       },
     );
