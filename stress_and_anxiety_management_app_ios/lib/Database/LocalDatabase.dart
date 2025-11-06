@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
@@ -10,9 +11,13 @@ class DatabaseHelper {
 
   static Database? _database;
 
+  // --- ValueNotifier to notify username changes ---
+  final ValueNotifier<String?> userNameNotifier = ValueNotifier(null);
+
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
+    await _loadUserNameNotifier(); // initialize the notifier
     return _database!;
   }
 
@@ -23,6 +28,7 @@ class DatabaseHelper {
     return await openDatabase(
       path,
       version: 3, // incremented version to ensure users table exists
+      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -51,6 +57,11 @@ class DatabaseHelper {
     ''');
 
     print('Database and tables created!');
+      CREATE TABLE user(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT
+      )
+    ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -67,9 +78,44 @@ class DatabaseHelper {
       ''');
       print('Database upgraded: Added users table.');
     }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE user(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT
+        )
+      ''');
+    }
+  }
+
+  // --- User methods ---
+  Future<int> saveUserName(String name) async {
+    final db = await database;
+    await db.delete('user'); // keep only one user
+    final id = await db.insert('user', {'name': name});
+    userNameNotifier.value = name; // notify listeners immediately
+    return id;
+  }
+
+  Future<String?> getUserName() async {
+    final db = await database;
+    final result = await db.query('user', limit: 1);
+    if (result.isNotEmpty) return result.first['name'] as String?;
+    return null;
+  }
+
+  Future<void> deleteUserName() async {
+    final db = await database;
+    await db.delete('user');
+    userNameNotifier.value = null; // notify listeners immediately
+  }
+
+  Future<void> _loadUserNameNotifier() async {
+    userNameNotifier.value = await getUserName();
   }
 
   // Reflection methods remain unchanged
+  // --- Keep your existing reflection methods as-is ---
   Future<int> insertReflection({
     required String who,
     required String what,
@@ -92,6 +138,16 @@ class DatabaseHelper {
       },
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
+  }
+
+  Future<int> clearReflections() async {
+    final db = await database;
+    return await db.delete('reflections');
+  }
+
+  Future<void> deleteAllData() async {
+    await clearReflections();
+    await deleteUserName();
   }
 
   Future<List<Map<String, dynamic>>> getReflections() async {
