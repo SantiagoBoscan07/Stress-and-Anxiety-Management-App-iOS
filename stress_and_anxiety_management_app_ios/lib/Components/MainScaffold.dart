@@ -88,7 +88,7 @@ class MainScaffold extends StatelessWidget {
               icon: Icons.logout,
               label: 'Logout',
               context: context,
-              onTap: () => _navigateTo(context, '/logout'),
+              onTap: () => Navigator.pushNamedAndRemoveUntil(context, '/logout', (route) => false),
             ),
           ],
         ),

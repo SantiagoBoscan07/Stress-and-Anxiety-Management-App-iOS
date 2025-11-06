@@ -37,16 +37,11 @@ class MyApp extends StatelessWidget {
         '/signup': (context) => const SignupScreen(),
         '/login': (context) => const LoginScreen(),
         '/logout': (context) => const LoginScreen(),
-        // Placeholder screens for features not implemented yet
-        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
-        '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
-        '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
         '/faq': (context) => const FaqScreen(), // FAQ Screen
         '/settings': (context) => const SettingScreen(),
         // Placeholder screens for features not implemented yet
         '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
-        '/logout': (context) => const PlaceholderScreen(title: 'Logout'),
       },
     );
   }

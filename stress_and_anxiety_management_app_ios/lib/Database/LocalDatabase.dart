@@ -28,7 +28,6 @@ class DatabaseHelper {
     return await openDatabase(
       path,
       version: 3, // incremented version to ensure users table exists
-      version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -57,11 +56,11 @@ class DatabaseHelper {
     ''');
 
     print('Database and tables created!');
-      CREATE TABLE user(
+    await db.execute('''CREATE TABLE user(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT
       )
-    ''');
+        ''');
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
@@ -174,11 +173,6 @@ class DatabaseHelper {
       where: 'date LIKE ?',
       whereArgs: ['$isoDate%'],
     );
-  }
-
-  Future<int> clearReflections() async {
-    final db = await database;
-    return await db.delete('reflections');
   }
 
   // USER AUTH
