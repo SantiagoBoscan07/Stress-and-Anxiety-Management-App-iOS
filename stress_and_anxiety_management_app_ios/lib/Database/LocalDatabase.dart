@@ -27,6 +27,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
+      version: 3, // incremented version to ensure users table exists
       version: 3,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
@@ -48,6 +49,14 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE users(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL
+      )
+    ''');
+
+    print('Database and tables created!');
       CREATE TABLE user(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT
@@ -58,6 +67,16 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS users(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL
+        )
+      ''');
+      print('Database upgraded: Added users table.');
     }
     if (oldVersion < 3) {
       await db.execute('''
@@ -95,6 +114,7 @@ class DatabaseHelper {
     userNameNotifier.value = await getUserName();
   }
 
+  // Reflection methods remain unchanged
   // --- Keep your existing reflection methods as-is ---
   Future<int> insertReflection({
     required String who,
@@ -154,5 +174,40 @@ class DatabaseHelper {
       where: 'date LIKE ?',
       whereArgs: ['$isoDate%'],
     );
+  }
+
+  Future<int> clearReflections() async {
+    final db = await database;
+    return await db.delete('reflections');
+  }
+
+  // USER AUTH
+  Future<int> insertUser(String email, String password) async {
+    final db = await database;
+    return await db.insert(
+      'users',
+      {'email': email, 'password': password},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<Map<String, dynamic>?> getUser(String email, String password) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'email = ? AND password = ?',
+      whereArgs: [email, password],
+    );
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<bool> emailExists(String email) async {
+    final db = await database;
+    final result = await db.query(
+      'users',
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    return result.isNotEmpty;
   }
 }
