@@ -22,13 +22,12 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2, // incremented version to include 'date'
+      version: 3, // incremented version to ensure users table exists
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
   }
 
-  // Create table with 'date' column
   Future<void> _onCreate(Database db, int version) async {
     await db.execute('''
       CREATE TABLE reflections(
@@ -51,18 +50,26 @@ class DatabaseHelper {
       )
     ''');
 
-    print('Database and table created!');
+    print('Database and tables created!');
   }
 
-  // Upgrade existing database to add 'date' column if missing
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
-      print('Database upgraded: Added "date" column.');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS users(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          email TEXT NOT NULL UNIQUE,
+          password TEXT NOT NULL
+        )
+      ''');
+      print('Database upgraded: Added users table.');
     }
   }
 
-  // Insert a reflection
+  // Reflection methods remain unchanged
   Future<int> insertReflection({
     required String who,
     required String what,
@@ -83,20 +90,18 @@ class DatabaseHelper {
         'date': date.toIso8601String(),
         'createdAt': DateTime.now().toIso8601String(),
       },
-      conflictAlgorithm: ConflictAlgorithm.replace, // optional
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
 
-  // Get all reflections
   Future<List<Map<String, dynamic>>> getReflections() async {
     final db = await database;
     return await db.query('reflections', orderBy: 'createdAt DESC');
   }
 
-  // Get reflections by specific date
   Future<List<Map<String, dynamic>>> getReflectionsByDate(DateTime date) async {
     final db = await database;
-    String isoDate = date.toIso8601String().substring(0, 10); // keep only YYYY-MM-DD
+    String isoDate = date.toIso8601String().substring(0, 10);
     return await db.query(
       'reflections',
       where: 'date LIKE ?',
@@ -105,10 +110,9 @@ class DatabaseHelper {
     );
   }
 
-  // Delete a reflection by Date
   Future<int> deleteReflectionsByDate(DateTime date) async {
     final db = await database;
-    String isoDate = date.toIso8601String().substring(0, 10); // YYYY-MM-DD
+    String isoDate = date.toIso8601String().substring(0, 10);
     return await db.delete(
       'reflections',
       where: 'date LIKE ?',
@@ -116,14 +120,12 @@ class DatabaseHelper {
     );
   }
 
-  // Clear all reflections
   Future<int> clearReflections() async {
     final db = await database;
     return await db.delete('reflections');
   }
 
-  // USER AUTHENTICATION LOGIC
-  // Insert new user
+  // USER AUTH
   Future<int> insertUser(String email, String password) async {
     final db = await database;
     return await db.insert(
@@ -133,7 +135,6 @@ class DatabaseHelper {
     );
   }
 
-  // Get user for login validation
   Future<Map<String, dynamic>?> getUser(String email, String password) async {
     final db = await database;
     final result = await db.query(
@@ -144,7 +145,6 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first : null;
   }
 
-  // Check if email already exists 
   Future<bool> emailExists(String email) async {
     final db = await database;
     final result = await db.query(

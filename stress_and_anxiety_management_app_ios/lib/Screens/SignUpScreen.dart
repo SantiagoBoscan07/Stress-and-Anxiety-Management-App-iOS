@@ -11,25 +11,54 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  String? message;
+
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return emailRegex.hasMatch(email);
+  }
+
+  Future<void> showErrorPopup(String message) async {
+    return showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> registerUser() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => message = "⚠️ All fields are required.");
+      await showErrorPopup("⚠️ All fields are required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      await showErrorPopup("❌ Please enter a valid email address.");
       return;
     }
 
     final exists = await DatabaseHelper().emailExists(email);
     if (exists) {
-      setState(() => message = "❌ Email already exists. Please log in.");
+      await showErrorPopup("❌ Email already exists. Please log in.");
       return;
     }
 
     await DatabaseHelper().insertUser(email, password);
-    setState(() => message = "✅ User registered successfully!");
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("✅ User registered successfully!")),
+    );
+
+    Navigator.pushNamed(context, '/login');
   }
 
   @override
@@ -55,14 +84,6 @@ class _SignupScreenState extends State<SignupScreen> {
               onPressed: registerUser,
               child: const Text("Sign Up"),
             ),
-            const SizedBox(height: 12),
-            if (message != null)
-              Text(
-                message!,
-                style: TextStyle(
-                  color: message!.contains('✅') ? Colors.green : Colors.red,
-                ),
-              ),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {

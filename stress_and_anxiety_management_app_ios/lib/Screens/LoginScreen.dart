@@ -12,14 +12,39 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  String? message;
+
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+    return emailRegex.hasMatch(email);
+  }
+
+  Future<void> showErrorPopup(String message) async {
+    return showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Error'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> loginUser() async {
     final email = emailController.text.trim();
     final password = passwordController.text.trim();
 
     if (email.isEmpty || password.isEmpty) {
-      setState(() => message = "⚠️ Please fill in all fields.");
+      await showErrorPopup("⚠️ Please fill in all fields.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      await showErrorPopup("❌ Invalid email format.");
       return;
     }
 
@@ -31,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
-      setState(() => message = "❌ Invalid credentials.");
+      await showErrorPopup("❌ Invalid credentials.");
     }
   }
 
@@ -58,14 +83,6 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: loginUser,
               child: const Text("Login"),
             ),
-            const SizedBox(height: 12),
-            if (message != null)
-              Text(
-                message!,
-                style: TextStyle(
-                  color: message!.contains('✅') ? Colors.green : Colors.red,
-                ),
-              ),
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {

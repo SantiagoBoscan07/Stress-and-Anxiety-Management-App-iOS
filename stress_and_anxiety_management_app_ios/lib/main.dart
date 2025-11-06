@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../Screens/HomeScreen.dart';
 import '../Screens/AboutScreen.dart';
+import '../Screens/LoginScreen.dart';
+import '../Screens/SignUpScreen.dart';
 
 
 /// Entry point of the Flutter application
@@ -27,15 +29,16 @@ class MyApp extends StatelessWidget {
 
       // Routes define named navigation paths for different screens
       routes: {
-        '/': (context) => const HomeScreen(), // Default home screen
+        '/': (context) => const LoginScreen(),
+        //'/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
+        '/signup': (context) => const SignupScreen(),
+        '/login': (context) => const LoginScreen(),
+        '/logout': (context) => const LoginScreen(),
         // Placeholder screens for features not implemented yet
         '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
         '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
-        '/login': (context) => const PlaceholderScreen(title: 'Login'),
-        '/signup': (context) => const PlaceholderScreen(title: 'Signup'),
-        '/logout': (context) => const PlaceholderScreen(title: 'Logout'),
       },
     );
   }
