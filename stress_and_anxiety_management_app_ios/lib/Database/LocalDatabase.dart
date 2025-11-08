@@ -42,14 +42,14 @@ class DatabaseHelper {
         createdAt TEXT NOT NULL
       )
     ''');
-    print('Database and table created!');
+    // Database and table created successfully
   }
 
   // Upgrade existing database to add 'date' column if missing
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
-      print('Database upgraded: Added "date" column.');
+      // Database upgraded: Added "date" column
     }
   }
 

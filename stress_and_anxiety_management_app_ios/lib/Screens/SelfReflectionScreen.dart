@@ -73,49 +73,178 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
   Future<void> saveReflection() async {
     if ([whoValue, whatValue, whenValue, whereValue, whyValue]
-        .any((v) => v == null || v.isEmpty)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please answer all questions!"),
-          backgroundColor: Colors.red,
-        ),
-      );
+        .any((v) => v == null || v.isEmpty || v == whoOptions[0] || v == whatOptions[0] || v == whenOptions[0] || v == whereOptions[0] || v == whyOptions[0])) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text("Please answer all questions!")),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
       return;
     }
 
-    await dbHelper.insertReflection(
-      who: whoValue!,
-      what: whatValue!,
-      when: whenValue!,
-      where: whereValue!,
-      why: whyValue!,
-      date: widget.selectedDate,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Reflection saved successfully!"),
-        backgroundColor: Colors.green,
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(
+        child: CircularProgressIndicator(color: Colors.white),
       ),
     );
+
+    try {
+      await dbHelper.insertReflection(
+        who: whoValue!,
+        what: whatValue!,
+        when: whenValue!,
+        where: whereValue!,
+        why: whyValue!,
+        date: widget.selectedDate,
+      );
+
+      if (mounted) {
+        Navigator.pop(context); // Dismiss loading
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.check_circle_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text("Reflection saved successfully!")),
+              ],
+            ),
+            backgroundColor: Colors.green.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        
+        // Vibrate for feedback (optional)
+        // HapticFeedback.lightImpact();
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Dismiss loading
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text("Failed to save reflection. Please try again.")),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
   }
 
   // Delete only reflections for the selected date
   Future<void> deleteReflectionsForSelectedDate() async {
-    await dbHelper.deleteReflectionsByDate(widget.selectedDate);
-    setState(() {
-      whoValue = whoOptions[0];
-      whatValue = whatOptions[0];
-      whenValue = whenOptions[0];
-      whereValue = whereOptions[0];
-      whyValue = whyOptions[0];
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("Reflections for selected date deleted."),
-        backgroundColor: Colors.red,
+    // Show confirmation dialog
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF3D4C59),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Delete Reflection?',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: const Text(
+          'Are you sure you want to delete the reflection for this date? This action cannot be undone.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.grey),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text(
+              'Delete',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
+
+    if (confirmed != true) return;
+
+    try {
+      await dbHelper.deleteReflectionsByDate(widget.selectedDate);
+      setState(() {
+        whoValue = whoOptions[0];
+        whatValue = whatOptions[0];
+        whenValue = whenOptions[0];
+        whereValue = whereOptions[0];
+        whyValue = whyOptions[0];
+      });
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.delete_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text("Reflection deleted successfully.")),
+              ],
+            ),
+            backgroundColor: Colors.orange.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: const [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 8),
+                Expanded(child: Text("Failed to delete reflection.")),
+              ],
+            ),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -137,6 +266,48 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            // Date Header Card
+            Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF546E7A), Color(0xFF78909C)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Reflection for',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.self_improvement, color: Colors.white70, size: 32),
+                ],
+              ),
+            ),
+            
             QuestionCard(
               title: "Who?",
               options: whoOptions,

@@ -35,18 +35,38 @@ class MainScaffold extends StatelessWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/logo.png', // App logo
-                    width: 80,
-                    height: 80,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/',
+                        (route) => false, // Remove all previous routes
+                      );
+                    },
+                    child: Image.asset(
+                      'assets/logo.png', // App logo
+                      width: 80,
+                      height: 80,
+                    ),
                   ),
                   const SizedBox(height: 8), // Space between logo and title
-                  Text(
-                    title, // App name
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.pop(context); // Close drawer
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/',
+                        (route) => false, // Remove all previous routes
+                      );
+                    },
+                    child: Text(
+                      title, // App name
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],

@@ -40,7 +40,7 @@ class QuestionCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(
-              value: selectedValue ?? options[0],
+              initialValue: selectedValue ?? options[0],
               dropdownColor: const Color(0xFF3D4C59),
               decoration: InputDecoration(
                 filled: true,

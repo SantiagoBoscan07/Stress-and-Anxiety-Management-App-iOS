@@ -25,10 +25,20 @@ class CalendarScreenWithCallback extends StatelessWidget {
       body: Column(
         children: [
           const SizedBox(height: 12),
-          Image.asset(
-            'assets/logo.png',
-            width: 120,
-            height: 120,
+          GestureDetector(
+            onTap: () => Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/',
+              (route) => false, // Remove all previous routes
+            ),
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              child: Image.asset(
+                'assets/logo.png',
+                width: 120,
+                height: 120,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           ReusableCalendar(

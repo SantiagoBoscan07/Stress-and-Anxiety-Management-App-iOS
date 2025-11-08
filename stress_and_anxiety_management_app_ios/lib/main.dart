@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../Screens/HomeScreen.dart';
-import '../Screens/AboutScreen.dart';
+import 'Screens/HomeScreen.dart';
+import 'Screens/AboutScreen.dart';
+import 'Screens/DashboardScreen.dart';
+import 'Screens/BreathingExerciseScreen.dart';
 
 /// Entry point of the Flutter application
 void main() {
@@ -28,8 +30,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
+        '/dashboard': (context) => const DashboardScreen(), // Dashboard with stats and recent reflections
+        '/breathing-exercise': (context) => const BreathingExerciseScreen(), // Breathing exercises for stress relief
         // Placeholder screens for features not implemented yet
-        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
         '/settings': (context) => const PlaceholderScreen(title: 'Settings'),
         '/logout': (context) => const PlaceholderScreen(title: 'Logout'),

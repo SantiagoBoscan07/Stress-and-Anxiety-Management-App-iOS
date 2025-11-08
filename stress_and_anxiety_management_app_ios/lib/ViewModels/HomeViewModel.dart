@@ -10,7 +10,7 @@ class HomeViewModel {
       ActionButton(
         label: 'Dashboard',
         icon: Icons.dashboard,
-        onPressed: () {},
+        onPressed: () => Navigator.pushNamed(context, '/dashboard'),
       ),
       const SizedBox(height: 12),
       ActionButton(
@@ -39,9 +39,9 @@ class HomeViewModel {
       ),
       const SizedBox(height: 12),
       ActionButton(
-        label: 'Immediate Exercises',
-        icon: Icons.fitness_center,
-        onPressed: () {},
+        label: 'Breathing Exercise',
+        icon: Icons.air,
+        onPressed: () => Navigator.pushNamed(context, '/breathing-exercise'),
       ),
       const SizedBox(height: 12),
       ActionButton(

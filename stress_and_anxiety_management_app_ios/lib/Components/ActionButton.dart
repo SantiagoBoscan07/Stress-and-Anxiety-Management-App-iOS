@@ -23,19 +23,46 @@ class ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: onPressed, // Executes callback when pressed
-      icon: Icon(icon, color: textColor), // Leading icon
-      label: Text(
-        label,
-        style: TextStyle(
-          fontSize: fontSize, // Customizable text size
-          color: textColor, // Customizable text color
-        ),
+    return Card(
+      elevation: 4,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
       ),
-      style: ElevatedButton.styleFrom(
-        minimumSize: Size.fromHeight(height), // Ensures button height
-        foregroundColor: textColor, // Sets text & icon color for the button
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF546E7A), Color(0xFF78909C)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: Icon(
+            icon, 
+            color: Colors.white,
+            size: 24,
+          ),
+          label: Text(
+            label,
+            style: TextStyle(
+              fontSize: fontSize,
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            minimumSize: Size.fromHeight(height),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          ),
+        ),
       ),
     );
   }
