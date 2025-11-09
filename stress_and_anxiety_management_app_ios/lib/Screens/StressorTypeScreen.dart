@@ -72,7 +72,7 @@ class _StressorTypeScreenState extends State<StressorTypeScreen> {
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Select the main stressor for today:',
+              'Select the main stressor:',
               style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),

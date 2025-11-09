@@ -83,7 +83,7 @@ class _StressorDetailScreenState extends State<StressorDetailScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: const Text(
-              'Which stressors affect you in this area today?',
+              'Which stressors affect you in this area?',
               style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
