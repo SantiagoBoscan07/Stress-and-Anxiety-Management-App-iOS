@@ -62,7 +62,16 @@ class DatabaseHelper {
       date TEXT NOT NULL UNIQUE,
       level INTEGER NOT NULL
     )
-  ''');
+    ''');
+
+    await db.execute('''
+    CREATE TABLE IF NOT EXISTS stressors(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL,
+      category TEXT NOT NULL,
+      detail TEXT
+    )
+    ''');
 
     await db.execute('''
       CREATE TABLE users(
@@ -295,5 +304,54 @@ class DatabaseHelper {
       whereArgs: ['$isoDate%'],
     );
   }
+
+  // Stressor activity
+
+  // Insert or update stressor
+  Future<void> insertStressor(DateTime date, String category, {String? detail}) async {
+    final db = await database;
+    await db.insert(
+      'stressors',
+      {
+        'date': date.toIso8601String().substring(0,10),
+        'category': category,
+        'detail': detail,
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Get stressor by date
+    Future<Map<String, dynamic>?> getStressor(DateTime date) async {
+      final db = await database;
+      final result = await db.query(
+        'stressors',
+        where: 'date LIKE ?',
+        whereArgs: ['${date.toIso8601String().substring(0,10)}%'],
+        limit: 1,
+      );
+      return result.isNotEmpty ? result.first : null;
+    }
+
+  // Update detail for stressor
+    Future<void> updateStressorDetail(DateTime date, String detail) async {
+      final db = await database;
+      await db.update(
+        'stressors',
+        {'detail': detail},
+        where: 'date LIKE ?',
+        whereArgs: ['${date.toIso8601String().substring(0,10)}%'],
+      );
+    }
+
+  // Delete stressor entry
+    Future<int> deleteStressor(DateTime date) async {
+      final db = await database;
+      return await db.delete(
+        'stressors',
+        where: 'date LIKE ?',
+        whereArgs: ['${date.toIso8601String().substring(0,10)}%'],
+      );
+    }
 
 }

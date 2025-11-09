@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../Database/LocalDatabase.dart';
+import 'StressorTypeScreen.dart';
 
 class ControlGaugeScreen extends StatefulWidget {
   final DateTime selectedDate;
@@ -169,7 +170,13 @@ class _ControlGaugeScreenState extends State<ControlGaugeScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ElevatedButton(
                 onPressed: () {
-                  // TODO: Navigate to next activity
+                  // Navigate to StressorTypeScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => StressorTypeScreen(selectedDate: widget.selectedDate),
+                    ),
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF556874),
