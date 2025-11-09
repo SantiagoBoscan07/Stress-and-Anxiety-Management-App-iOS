@@ -57,6 +57,14 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+      CREATE TABLE control_gauge(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL UNIQUE,
+      level INTEGER NOT NULL
+    )
+    ''');
+
+    await db.execute('''
       CREATE TABLE users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL UNIQUE,
@@ -239,5 +247,31 @@ class DatabaseHelper {
       limit: 1,
     );
     return result.isNotEmpty ? result.first['mood'] as String : null;
+  }
+
+  // Control Gauge
+  Future<int> insertControlGauge(DateTime date, int level) async {
+    final db = await database;
+    String isoDate = date.toIso8601String().substring(0, 10);
+    return await db.insert(
+      'control_gauge',
+      {'date': isoDate, 'level': level},
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<int?> getControlGauge(DateTime date) async {
+    final db = await database;
+    String isoDate = date.toIso8601String().substring(0, 10);
+    final result = await db.query(
+      'control_gauge',
+      where: 'date = ?',
+      whereArgs: [isoDate],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return result.first['level'] as int;
+    }
+    return null;
   }
 }

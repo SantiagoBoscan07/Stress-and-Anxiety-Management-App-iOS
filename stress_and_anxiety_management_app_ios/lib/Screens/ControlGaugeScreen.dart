@@ -1,47 +1,47 @@
 import 'package:flutter/material.dart';
 import '../Database/LocalDatabase.dart';
-import 'ControlGaugeScreen.dart';
 
-class MoodSelectionScreen extends StatefulWidget {
+class ControlGaugeScreen extends StatefulWidget {
   final DateTime selectedDate;
 
-  const MoodSelectionScreen({super.key, required this.selectedDate});
+  const ControlGaugeScreen({super.key, required this.selectedDate});
 
   @override
-  State<MoodSelectionScreen> createState() => _MoodSelectionScreenState();
+  State<ControlGaugeScreen> createState() => _ControlGaugeScreenState();
 }
 
-class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
+class _ControlGaugeScreenState extends State<ControlGaugeScreen> {
   final DatabaseHelper dbHelper = DatabaseHelper();
-  String? selectedMood;
+  int? selectedSection;
 
-  final List<Map<String, dynamic>> moods = [
-    {'label': 'Happy', 'color': Colors.green},
-    {'label': 'Sad', 'color': Colors.blue},
-    {'label': 'Angry', 'color': Colors.red},
-    {'label': 'Neutral', 'color': Colors.grey},
+  final List<Map<String, dynamic>> sections = [
+    {'label': '1', 'color': Colors.red},
+    {'label': '2', 'color': Colors.orange},
+    {'label': '3', 'color': Colors.yellow},
+    {'label': '4', 'color': Colors.lightGreen},
+    {'label': '5', 'color': Colors.green},
   ];
 
   @override
   void initState() {
     super.initState();
-    _loadSavedMood();
+    _loadSavedSection();
   }
 
-  Future<void> _loadSavedMood() async {
-    final moodFromDb = await dbHelper.getMood(widget.selectedDate);
+  Future<void> _loadSavedSection() async {
+    final sectionFromDb = await dbHelper.getControlGauge(widget.selectedDate);
     setState(() {
-      selectedMood = moodFromDb;
+      selectedSection = sectionFromDb;
     });
   }
 
-  Future<void> saveMood(String mood) async {
-    await dbHelper.insertMood(widget.selectedDate, mood);
-    setState(() => selectedMood = mood);
+  Future<void> saveSection(int section) async {
+    await dbHelper.insertControlGauge(widget.selectedDate, section);
+    setState(() => selectedSection = section);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Mood "$mood" saved!'),
+        content: Text('Control level "$section" saved!'),
         backgroundColor: Colors.green,
       ),
     );
@@ -54,7 +54,7 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFF2F3941),
       appBar: AppBar(
-        title: const Text('Mood Tracker'),
+        title: const Text('Control Gauge'),
         backgroundColor: const Color(0xFF546E7A),
         centerTitle: true,
         titleTextStyle: const TextStyle(
@@ -66,11 +66,11 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
       ),
       body: Column(
         children: [
-          // Title at the top
+          // Title
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             child: Text(
-              'Select your mood for ${widget.selectedDate.toLocal().toIso8601String().substring(0, 10)}',
+              'How in control do you feel on ${widget.selectedDate.toLocal().toIso8601String().substring(0, 10)}?',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -80,11 +80,12 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
             ),
           ),
 
+          // --- Description about the gauge ---
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Text(
-              'Choose the mood that best represents how you feel today.\n'
-                  'This helps you track your feelings over time. Tap a button to select your mood!',
+              'Pick the section that best represents how in control you feel today.\n'
+                  '1 = least control, 5 = most control. Tap a section to select it!',
               style: const TextStyle(
                 color: Colors.white70,
                 fontSize: 16,
@@ -94,7 +95,7 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
             ),
           ),
 
-          // Mood card always visible
+          // Selected section card
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Card(
@@ -106,9 +107,9 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
                 padding:
                 const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                 child: Text(
-                  selectedMood != null
-                      ? 'Selected Mood: $selectedMood'
-                      : 'No mood selected',
+                  selectedSection != null
+                      ? 'Selected Level: $selectedSection'
+                      : 'No level selected',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -122,30 +123,35 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
 
           const SizedBox(height: 24),
 
-          // Center the mood buttons
+          // Gauge buttons
           Expanded(
             child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: moods.map((mood) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: ElevatedButton(
-                      onPressed: () => saveMood(mood['label'] as String),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: mood['color'] as Color,
-                        minimumSize: Size(screenWidth * 0.8, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: sections.map((section) {
+                  final int index = int.parse(section['label']);
+                  final bool isSelected = selectedSection != null && index <= selectedSection!;
+                  return GestureDetector(
+                    onTap: () => saveSection(index),
+                    child: Container(
+                      width: 50,
+                      height: 150,
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? section['color'] as Color
+                            : Colors.white12,
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Text(
-                        mood['label'] as String,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          section['label'],
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -157,18 +163,13 @@ class _MoodSelectionScreenState extends State<MoodSelectionScreen> {
 
           const SizedBox(height: 24),
 
-          // Continue button only visible after mood is selected
-          if (selectedMood != null)
+          // Continue button
+          if (selectedSection != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ControlGaugeScreen(selectedDate: widget.selectedDate),
-                    ),
-                  );
+                  // TODO: Navigate to next activity
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF556874),
