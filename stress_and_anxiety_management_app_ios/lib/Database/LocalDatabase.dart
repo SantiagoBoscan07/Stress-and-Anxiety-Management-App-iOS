@@ -57,12 +57,12 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
-      CREATE TABLE control_gauge(
+    CREATE TABLE control_gauge(
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       date TEXT NOT NULL UNIQUE,
       level INTEGER NOT NULL
     )
-    ''');
+  ''');
 
     await db.execute('''
       CREATE TABLE users(
@@ -249,6 +249,16 @@ class DatabaseHelper {
     return result.isNotEmpty ? result.first['mood'] as String : null;
   }
 
+  // Delete mood for a date
+  Future<void> deleteMood(DateTime date) async {
+    final db = await database;
+    await db.delete(
+      'moods',
+      where: 'date LIKE ?',
+      whereArgs: [date.toIso8601String().substring(0, 10) + '%'],
+    );
+  }
+
   // Control Gauge
   Future<int> insertControlGauge(DateTime date, int level) async {
     final db = await database;
@@ -274,4 +284,16 @@ class DatabaseHelper {
     }
     return null;
   }
+
+  // Delete control gauge value for a date
+  Future<int> deleteControlGauge(DateTime date) async {
+    final db = await database;
+    String isoDate = date.toIso8601String().substring(0, 10);
+    return await db.delete(
+      'control_gauge',
+      where: 'date LIKE ?',
+      whereArgs: ['$isoDate%'],
+    );
+  }
+
 }

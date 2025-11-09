@@ -166,14 +166,14 @@ class _ControlGaugeScreenState extends State<ControlGaugeScreen> {
           // Continue button
           if (selectedSection != null)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: ElevatedButton(
                 onPressed: () {
                   // TODO: Navigate to next activity
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF556874),
-                  minimumSize: Size(screenWidth * 0.8, 50),
+                  minimumSize: Size(MediaQuery.of(context).size.width * 0.8, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -189,6 +189,41 @@ class _ControlGaugeScreenState extends State<ControlGaugeScreen> {
                 ),
               ),
             ),
+
+          // Reset button
+          if (selectedSection != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ElevatedButton(
+                onPressed: () async {
+                  await dbHelper.deleteControlGauge(widget.selectedDate);
+                  setState(() => selectedSection = null);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Control entry deleted. You can start over!'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFB00020),
+                  minimumSize: Size(MediaQuery.of(context).size.width * 0.8, 50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  'Erase Data',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+
 
           const SizedBox(height: 24),
         ],
