@@ -1,4 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+
+import 'package:flutter/material.dart';
+import 'package:sqflite/sqflite.dart';
 import '../Screens/HomeScreen.dart';
 import '../Screens/AboutScreen.dart';
 import '../Screens/LoginScreen.dart';
@@ -8,8 +14,16 @@ import '../Screens/FaqScreen.dart';
 import '../Screens/SettingScreen.dart';
 
 /// Entry point of the Flutter application
-void main() {
+void main() async
+{
   WidgetsFlutterBinding.ensureInitialized();
+  Directory documentsDirectory = await getApplicationDocumentsDirectory();
+  String path = join(documentsDirectory.path, 'reflections.db');
+  if (await File(path).exists())
+  {
+  await deleteDatabase(path);
+  print('Old database deleted. A fresh database will be created.');
+  }
   runApp(const MyApp()); // Runs the root widget of the app
 }
 

@@ -48,6 +48,15 @@ class DatabaseHelper {
     ''');
 
     await db.execute('''
+    CREATE TABLE moods(
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      date TEXT NOT NULL UNIQUE,
+      mood TEXT NOT NULL,
+      createdAt TEXT NOT NULL
+    )
+    ''');
+
+    await db.execute('''
       CREATE TABLE users(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT NOT NULL UNIQUE,
@@ -203,5 +212,32 @@ class DatabaseHelper {
       whereArgs: [email],
     );
     return result.isNotEmpty;
+  }
+
+  // Mood Selection
+  Future<int> insertMood(DateTime date, String mood) async {
+    final db = await database;
+    return await db.insert(
+      'moods',
+      {
+        'date': date.toIso8601String().substring(0, 10),
+        'mood': mood,
+        'createdAt': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  // Get mood for a specific date
+  Future<String?> getMood(DateTime date) async {
+    final db = await database;
+    String isoDate = date.toIso8601String().substring(0, 10);
+    final result = await db.query(
+      'moods',
+      where: 'date = ?',
+      whereArgs: [isoDate],
+      limit: 1,
+    );
+    return result.isNotEmpty ? result.first['mood'] as String : null;
   }
 }
