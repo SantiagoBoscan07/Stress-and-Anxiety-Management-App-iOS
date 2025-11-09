@@ -65,6 +65,9 @@ class _StressorTypeScreenState extends State<StressorTypeScreen> {
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
+        iconTheme: const IconThemeData(
+          color: Colors.white,
+        ),
       ),
       body: Column(
         children: [
