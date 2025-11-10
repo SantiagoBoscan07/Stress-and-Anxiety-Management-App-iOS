@@ -16,7 +16,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
     "Select a question...",
     "Who inspires you the most and why?",
     "Who do you trust deeply in your life?",
-    "Who do you want to be in five years?"
+    "Who do you want to be in five years?",
   ];
 
   final List<String> whatOptions = [
@@ -72,8 +72,16 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
   }
 
   Future<void> saveReflection() async {
-    if ([whoValue, whatValue, whenValue, whereValue, whyValue]
-        .any((v) => v == null || v.isEmpty || v == whoOptions[0] || v == whatOptions[0] || v == whenOptions[0] || v == whereOptions[0] || v == whyOptions[0])) {
+    if ([whoValue, whatValue, whenValue, whereValue, whyValue].any(
+      (v) =>
+          v == null ||
+          v.isEmpty ||
+          v == whoOptions[0] ||
+          v == whatOptions[0] ||
+          v == whenOptions[0] ||
+          v == whereOptions[0] ||
+          v == whyOptions[0],
+    )) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -86,7 +94,9 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
             ),
             backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -98,9 +108,8 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => const Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      ),
+      builder: (context) =>
+          const Center(child: CircularProgressIndicator(color: Colors.white)),
     );
 
     try {
@@ -115,42 +124,88 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
       if (mounted) {
         Navigator.pop(context); // Dismiss loading
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: const [
-                Icon(Icons.check_circle_outline, color: Colors.white),
-                SizedBox(width: 8),
-                Expanded(child: Text("Reflection saved successfully!")),
+
+        // Show congrats dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            backgroundColor: const Color(0xFF3D4C59),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.celebration, color: Colors.amber, size: 64),
+                const SizedBox(height: 20),
+                const Text(
+                  'Congratulations!',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'You have successfully completed your reflection for today. Keep up the great work on your wellness journey!',
+                  style: TextStyle(color: Colors.white70, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Dismiss dialog
+                    Navigator.pushNamedAndRemoveUntil(
+                      context,
+                      '/',
+                      (route) => false,
+                    ); // Navigate to home and clear stack
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 12,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Continue',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                ),
               ],
             ),
-            backgroundColor: Colors.green.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
           ),
         );
-        
+
         // Vibrate for feedback (optional)
         // HapticFeedback.lightImpact();
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context); // Dismiss loading
-        
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Row(
               children: const [
                 Icon(Icons.error_outline, color: Colors.white),
                 SizedBox(width: 8),
-                Expanded(child: Text("Failed to save reflection. Please try again.")),
+                Expanded(
+                  child: Text("Failed to save reflection. Please try again."),
+                ),
               ],
             ),
             backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -177,21 +232,17 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(color: Colors.grey),
-            ),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade700,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -208,7 +259,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         whereValue = whereOptions[0];
         whyValue = whyOptions[0];
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -221,7 +272,9 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
             ),
             backgroundColor: Colors.orange.shade700,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -239,7 +292,9 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
             ),
             backgroundColor: Colors.red.shade700,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -256,7 +311,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         backgroundColor: const Color(0xFF546E7A), // AppBar background color
         centerTitle: true,
         titleTextStyle: const TextStyle(
-          color: Colors.white, // <-- set AppBar title text to white
+          color: Colors.white, //set AppBar title text to white
           fontSize: 20,
         ),
         iconTheme: const IconThemeData(
@@ -280,17 +335,18 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.calendar_today, color: Colors.white, size: 24),
+                  const Icon(
+                    Icons.calendar_today,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Reflection for',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 14,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 14),
                       ),
                       Text(
                         '${widget.selectedDate.day}/${widget.selectedDate.month}/${widget.selectedDate.year}',
@@ -303,11 +359,15 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                     ],
                   ),
                   const Spacer(),
-                  const Icon(Icons.self_improvement, color: Colors.white70, size: 32),
+                  const Icon(
+                    Icons.self_improvement,
+                    color: Colors.white70,
+                    size: 32,
+                  ),
                 ],
               ),
             ),
-            
+
             QuestionCard(
               title: "Who?",
               options: whoOptions,
