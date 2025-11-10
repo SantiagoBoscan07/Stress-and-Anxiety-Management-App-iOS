@@ -17,24 +17,7 @@ class HomeViewModel {
         label: 'Awareness Questions',
         icon: Icons.help,
         onPressed: () {
-          // Navigate to CalendarScreen first
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => CalendarScreenWithCallback(
-                onDateSelected: (selectedDate) {
-                  // After selecting a date, navigate to SelfReflectScreen
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          SelfReflectScreen(selectedDate: selectedDate),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
+          _showDateSelectionDialog(context);
         },
       ),
       const SizedBox(height: 12),
@@ -66,5 +49,111 @@ class HomeViewModel {
       {'icon': Icons.fitness_center, 'label': 'Immediate Exercises'},
       {'icon': Icons.calendar_today, 'label': 'Monthly Calendar'},
     ];
+  }
+
+  void _showDateSelectionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2F3941),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'When would you like to reflect?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Choose to reflect on today\'s experiences or select a different date.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.maxFinite,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _navigateToReflection(context, DateTime.now());
+                  },
+                  icon: const Icon(Icons.today, color: Colors.white),
+                  label: const Text(
+                    'Use Today\'s Date',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF546E7A),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _navigateToCalendarSelection(context);
+                  },
+                  icon: const Icon(Icons.calendar_month, color: Colors.white70),
+                  label: const Text(
+                    'Choose Different Date',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white70),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _navigateToReflection(BuildContext context, DateTime selectedDate) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelfReflectScreen(selectedDate: selectedDate),
+      ),
+    );
+  }
+
+  void _navigateToCalendarSelection(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CalendarScreenWithCallback(
+          onDateSelected: (selectedDate) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SelfReflectScreen(selectedDate: selectedDate),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }
