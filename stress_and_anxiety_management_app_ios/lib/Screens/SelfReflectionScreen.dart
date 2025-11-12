@@ -101,6 +101,14 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
           ),
         );
       }
+    if ([whoValue, whatValue, whenValue, whereValue, whyValue]
+        .any((v) => v == null || v.isEmpty || v == "Select a question...")) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please answer all questions!"),
+          backgroundColor: Colors.red,
+        ),
+      );
       return;
     }
 
@@ -213,7 +221,6 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
     }
   }
 
-  // Delete only reflections for the selected date
   Future<void> deleteReflectionsForSelectedDate() async {
     // Show confirmation dialog
     final confirmed = await showDialog<bool>(
@@ -304,21 +311,25 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       backgroundColor: const Color(0xFF2F3941),
       appBar: AppBar(
         title: const Text("Self-Reflection"),
-        backgroundColor: const Color(0xFF546E7A), // AppBar background color
+        backgroundColor: const Color(0xFF546E7A),
         centerTitle: true,
         titleTextStyle: const TextStyle(
           color: Colors.white, //set AppBar title text to white
+          color: Colors.white,
           fontSize: 20,
         ),
         iconTheme: const IconThemeData(
-          color: Colors.white, // Back arrow white
+          color: Colors.white,
         ),
       ),
       body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
         child: Column(
           children: [
             // Date Header Card
@@ -405,14 +416,15 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
             ),
             const SizedBox(height: 16),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ElevatedButton.icon(
                     onPressed: saveReflection,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF556874),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -428,7 +440,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                     onPressed: deleteReflectionsForSelectedDate,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFB00020),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),

@@ -1,38 +1,31 @@
 import 'package:flutter/material.dart';
 import '../Components/AboutTextBox.dart';
 
-/// AboutScreen displays information about the app, including a logo
-/// at the top and a descriptive text box below.
-/// This screen has a simple AppBar with a back button for navigation.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      // Sets the background color of the screen
-      backgroundColor: const Color(0xFF708694),
+    double screenWidth = MediaQuery.of(context).size.width;
 
-      // AppBar with back button
+    return Scaffold(
+      backgroundColor: const Color(0xFF708694),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF546E7A), // AppBar background color
+        backgroundColor: const Color(0xFF546E7A),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // Back arrow
-          onPressed: () => Navigator.pop(context), // Returns to previous screen
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
-          'About Us', // AppBar title
-          style: TextStyle(color: Colors.white), // White text
+          'About Us',
+          style: TextStyle(color: Colors.white),
         ),
-        centerTitle: true, // Center the title in the AppBar
+        centerTitle: true,
       ),
-
-      // Main content: logo at top, text box below
       body: SingleChildScrollView(
-        // Allows scrolling if content exceeds screen height
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Logo centered at the top - clickable to go home
             Center(
@@ -50,18 +43,27 @@ class AboutScreen extends StatelessWidget {
                     height: 120,
                   ),
                 ),
+            // Responsive logo
+            Center(
+              child: Image.asset(
+                'assets/logo.png',
+                width: screenWidth * 0.5, // 50% of screen width
+                height: screenWidth * 0.33, // proportional height
+                fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 32), // Space between logo and text box
+            const SizedBox(height: 32),
 
-            // Text box describing the app
-            // Uses AboutTextBox component with slightly larger font
-            const AboutTextBox(
-              text:
-              "HowRU is a mental wellness app designed to help users manage anxiety and stress. "
-                  "It features a daily mood diary to track emotional patterns and guided breathing exercises "
-                  "to quickly reduce anxiety, offering practical tools for building mindfulness and improving mental well-being.",
-              fontSize: 18, // Slightly larger text for readability
+            // Responsive text box
+            SizedBox(
+              width: double.infinity,
+              child: const AboutTextBox(
+                text:
+                "HowRU is a mental wellness app designed to help users manage anxiety and stress. "
+                    "It features a daily mood diary to track emotional patterns and guided breathing exercises "
+                    "to quickly reduce anxiety, offering practical tools for building mindfulness and improving mental well-being.",
+                fontSize: 18,
+              ),
             ),
           ],
         ),

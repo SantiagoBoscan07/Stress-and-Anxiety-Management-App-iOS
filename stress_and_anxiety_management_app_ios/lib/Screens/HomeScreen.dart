@@ -1,57 +1,97 @@
 import 'package:flutter/material.dart';
 import '../ViewModels/HomeViewModel.dart';
 import '../Components/MainScaffold.dart';
+import '../Database/LocalDatabase.dart';
+import '../Screens/SettingScreen.dart';
+import '../Components/WelcomeCardComponent.dart';
 
-
-/// HomeScreen is the main landing page of the app.
-/// It displays the logo, a welcome message, and a list of action buttons.
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Initialize the HomeViewModel which provides the list of action buttons
-    final viewModel = HomeViewModel();
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-    // MainScaffold is a reusable layout that already includes
-    // the top NavBar and side Drawer with menu items
+class _HomeScreenState extends State<HomeScreen> {
+  final dbHelper = DatabaseHelper();
+  late Future<String?> _userNameFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  void _loadUserName() {
+    _userNameFuture = dbHelper.getUserName();
+  }
+
+  Future<void> _navigateToSettings(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingScreen()),
+    );
+    setState(() {
+      _loadUserName();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = HomeViewModel();
+    final mediaQuery = MediaQuery.of(context);
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    // Dynamic sizing
+    final logoWidth = screenWidth * 0.45;
+    final logoHeight = screenHeight * 0.22;
+    final cardFontSize = screenWidth * 0.045;
+    final spacingSmall = screenHeight * 0.015;
+    final spacingMedium = screenHeight * 0.025;
+
     return MainScaffold(
       body: SingleChildScrollView(
-        // Allows the content to scroll if the screen is small
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.symmetric(
+          vertical: spacingMedium,
+          horizontal: screenWidth * 0.04,
+        ),
         child: Column(
-          // Column stacks widgets vertically
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // App logo at the top
             Image.asset(
               'assets/logo.png',
-              width: 200,
-              height: 180,
+              width: logoWidth,
+              height: logoHeight,
+              fit: BoxFit.contain,
             ),
-            const SizedBox(height: 24), // Space between logo and card
+            SizedBox(height: spacingMedium),
 
-            // Welcome message displayed in a styled Card
-            Card(
-              color: Colors.blueGrey[700], // Dark card background
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16), // Rounded corners
-              ),
-              child: const Padding(
-                padding: EdgeInsets.all(16), // Inner spacing for text
-                child: Text(
-                  'Welcome User, what would you like to do?',
-                  textAlign: TextAlign.center, // Centered text
-                  style: TextStyle(
-                    color: Colors.white, // White text for contrast
-                    fontSize: 18, // Slightly larger font for readability
+            // Use WelcomeCard component
+            FutureBuilder<String?>(
+              future: _userNameFuture,
+              builder: (context, snapshot) {
+                return WelcomeCard(
+                  fontSize: cardFontSize,
+                  padding: screenWidth * 0.04,
+                );
+              },
+            ),
+
+            SizedBox(height: spacingMedium),
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: viewModel.getButtons(context).map((button) {
+                return Padding(
+                  padding: EdgeInsets.symmetric(vertical: spacingSmall / 2),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: button,
                   ),
-                ),
-              ),
+                );
+              }).toList(),
             ),
-            const SizedBox(height: 24), // Space between card and buttons
-
-            // Display the list of action buttons from the ViewModel
-            Column(children: viewModel.getButtons(context)),
           ],
         ),
       ),
