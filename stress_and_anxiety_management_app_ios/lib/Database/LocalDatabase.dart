@@ -46,6 +46,7 @@ class DatabaseHelper {
         createdAt TEXT NOT NULL
       )
     ''');
+    // Database and table created successfully
 
     await db.execute('''
     CREATE TABLE moods(
@@ -92,6 +93,7 @@ class DatabaseHelper {
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE reflections ADD COLUMN date TEXT');
+      // Database upgraded: Added "date" column
     }
     if (oldVersion < 3) {
       await db.execute('''

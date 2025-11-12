@@ -27,6 +27,22 @@ class AboutScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Logo centered at the top - clickable to go home
+            Center(
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false, // Remove all previous routes
+                ),
+                child: Container(
+                  padding: const EdgeInsets.all(8),
+                  child: Image.asset(
+                    'assets/logo.png', // App logo
+                    width: 180,
+                    height: 120,
+                  ),
+                ),
             // Responsive logo
             Center(
               child: Image.asset(

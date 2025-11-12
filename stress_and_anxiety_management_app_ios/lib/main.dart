@@ -1,5 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'Screens/HomeScreen.dart';
+import 'Screens/AboutScreen.dart';
+import 'Screens/DashboardScreen.dart';
+import 'Screens/BreathingExerciseScreen.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -48,13 +52,14 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginScreen(),
         //'/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
+        '/dashboard': (context) => const DashboardScreen(), // Dashboard with stats and recent reflections
+        '/breathing-exercise': (context) => const BreathingExerciseScreen(), // Breathing exercises for stress relief
         '/signup': (context) => const SignupScreen(),
         '/login': (context) => const LoginScreen(),
         '/logout': (context) => const LoginScreen(),
         '/faq': (context) => const FaqScreen(), // FAQ Screen
         '/settings': (context) => const SettingScreen(),
         // Placeholder screens for features not implemented yet
-        '/dashboard': (context) => const PlaceholderScreen(title: 'Dashboard'),
         '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
       },
     );

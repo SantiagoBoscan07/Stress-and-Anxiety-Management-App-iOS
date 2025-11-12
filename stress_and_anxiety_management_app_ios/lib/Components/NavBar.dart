@@ -19,7 +19,8 @@ class NavBar extends StatelessWidget implements PreferredSizeWidget {
         style: TextStyle(color: Colors.white), // White title for contrast
       ),
       leading: IconButton(
-        icon: const Icon(Icons.menu, color: Colors.white), // Hamburger menu icon
+        icon:
+            const Icon(Icons.menu, color: Colors.white), // Hamburger menu icon
         onPressed: () => scaffoldKey.currentState?.openDrawer(),
         // Opens the Drawer when pressed using the provided scaffoldKey
       ),
