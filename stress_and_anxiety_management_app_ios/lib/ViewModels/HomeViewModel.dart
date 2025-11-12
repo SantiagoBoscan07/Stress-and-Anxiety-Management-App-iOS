@@ -29,8 +29,6 @@ class HomeViewModel {
       ),
       const SizedBox(height: 12),
       ActionButton(
-        label: 'Monthly Calendar',
-        icon: Icons.calendar_today,
         label: 'Mood Tracker',
         icon: Icons.emoji_emotions,
         onPressed: () {

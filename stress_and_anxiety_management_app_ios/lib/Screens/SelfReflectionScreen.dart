@@ -73,8 +73,8 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
 
   Future<void> saveReflection() async {
     if ([whoValue, whatValue, whenValue, whereValue, whyValue].any(
-      (v) =>
-          v == null ||
+          (v) =>
+      v == null ||
           v.isEmpty ||
           v == whoOptions[0] ||
           v == whatOptions[0] ||
@@ -101,122 +101,125 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
           ),
         );
       }
-    if ([whoValue, whatValue, whenValue, whereValue, whyValue]
-        .any((v) => v == null || v.isEmpty || v == "Select a question...")) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Please answer all questions!"),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) =>
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
-    );
-
-    try {
-      await dbHelper.insertReflection(
-        who: whoValue!,
-        what: whatValue!,
-        when: whenValue!,
-        where: whereValue!,
-        why: whyValue!,
-        date: widget.selectedDate,
-      );
-
-      if (mounted) {
-        Navigator.pop(context); // Dismiss loading
-
-        // Show congrats dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (context) => AlertDialog(
-            backgroundColor: const Color(0xFF3D4C59),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.celebration, color: Colors.amber, size: 64),
-                const SizedBox(height: 20),
-                const Text(
-                  'Congratulations!',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                const Text(
-                  'You have successfully completed your reflection for today. Keep up the great work on your wellness journey!',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // Dismiss dialog
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/',
-                      (route) => false,
-                    ); // Navigate to home and clear stack
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green.shade700,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-
-        // Vibrate for feedback (optional)
-        // HapticFeedback.lightImpact();
-      }
-    } catch (e) {
-      if (mounted) {
-        Navigator.pop(context); // Dismiss loading
-
+      if ([whoValue, whatValue, whenValue, whereValue, whyValue]
+          .any((v) => v == null || v.isEmpty || v == "Select a question...")) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: const [
-                Icon(Icons.error_outline, color: Colors.white),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text("Failed to save reflection. Please try again."),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red.shade700,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            margin: const EdgeInsets.all(16),
+          const SnackBar(
+            content: Text("Please answer all questions!"),
+            backgroundColor: Colors.red,
           ),
         );
+        return;
+      }
+
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) =>
+        const Center(child: CircularProgressIndicator(color: Colors.white)),
+      );
+
+      try {
+        await dbHelper.insertReflection(
+          who: whoValue!,
+          what: whatValue!,
+          when: whenValue!,
+          where: whereValue!,
+          why: whyValue!,
+          date: widget.selectedDate,
+        );
+
+        if (mounted) {
+          Navigator.pop(context); // Dismiss loading
+
+          // Show congrats dialog
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) =>
+                AlertDialog(
+                  backgroundColor: const Color(0xFF3D4C59),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                          Icons.celebration, color: Colors.amber, size: 64),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Congratulations!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'You have successfully completed your reflection for today. Keep up the great work on your wellness journey!',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Dismiss dialog
+                          Navigator.pushNamedAndRemoveUntil(
+                            context,
+                            '/',
+                                (route) => false,
+                          ); // Navigate to home and clear stack
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green.shade700,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Continue',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+          );
+
+          // Vibrate for feedback (optional)
+          // HapticFeedback.lightImpact();
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Dismiss loading
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: const [
+                  Icon(Icons.error_outline, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text("Failed to save reflection. Please try again."),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.red.shade700,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
       }
     }
   }
@@ -321,7 +324,6 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
         centerTitle: true,
         titleTextStyle: const TextStyle(
           color: Colors.white, //set AppBar title text to white
-          color: Colors.white,
           fontSize: 20,
         ),
         iconTheme: const IconThemeData(

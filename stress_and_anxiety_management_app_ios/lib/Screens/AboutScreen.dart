@@ -33,23 +33,17 @@ class AboutScreen extends StatelessWidget {
                 onTap: () => Navigator.pushNamedAndRemoveUntil(
                   context,
                   '/',
-                  (route) => false, // Remove all previous routes
+                      (route) => false, // Remove all previous routes
                 ),
                 child: Container(
                   padding: const EdgeInsets.all(8),
                   child: Image.asset(
                     'assets/logo.png', // App logo
-                    width: 180,
-                    height: 120,
+                    width: screenWidth * 0.5, // 50% of screen width
+                    height: screenWidth * 0.33, // proportional height
+                    fit: BoxFit.contain,
                   ),
                 ),
-            // Responsive logo
-            Center(
-              child: Image.asset(
-                'assets/logo.png',
-                width: screenWidth * 0.5, // 50% of screen width
-                height: screenWidth * 0.33, // proportional height
-                fit: BoxFit.contain,
               ),
             ),
             const SizedBox(height: 32),

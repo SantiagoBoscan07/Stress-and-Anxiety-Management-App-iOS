@@ -30,27 +30,6 @@ class QuestionCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              initialValue: selectedValue ?? options[0],
-              dropdownColor: const Color(0xFF3D4C59),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: const Color(0xFF3D4C59),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: const BorderSide(color: Color(0xFF78909C)),
         child: ConstrainedBox(
           constraints: BoxConstraints(
             maxWidth: screenWidth - 32, // ensures padding doesn't overflow
@@ -68,7 +47,7 @@ class QuestionCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
-                value: selectedValue ?? options[0],
+                value: selectedValue ?? options.first,
                 dropdownColor: const Color(0xFF3D4C59),
                 decoration: InputDecoration(
                   filled: true,
@@ -78,10 +57,12 @@ class QuestionCard extends StatelessWidget {
                     borderSide: const BorderSide(color: Color(0xFF78909C)),
                   ),
                   errorText: errorText,
-                  contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
                 ),
-                isExpanded: true, // key to prevent overflow
+                isExpanded: true,
                 items: options.map((e) {
                   return DropdownMenuItem(
                     value: e,
