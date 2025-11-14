@@ -18,15 +18,13 @@ import '../Screens/FaqScreen.dart';
 import '../Screens/SettingScreen.dart';
 
 /// Entry point of the Flutter application
-void main() async
-{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   Directory documentsDirectory = await getApplicationDocumentsDirectory();
   String path = join(documentsDirectory.path, 'reflections.db');
-  if (await File(path).exists())
-  {
-  await deleteDatabase(path);
-  print('Old database deleted. A fresh database will be created.');
+  if (await File(path).exists()) {
+    await deleteDatabase(path);
+    print('Old database deleted. A fresh database will be created.');
   }
   runApp(const MyApp()); // Runs the root widget of the app
 }
@@ -41,10 +39,12 @@ class MyApp extends StatelessWidget {
     // MaterialApp is the main wrapper that provides material design styling,
     // themes, navigation, and routes to the app.
     return MaterialApp(
-      debugShowCheckedModeBanner: false, // Hides the debug banner in the top-right
+      debugShowCheckedModeBanner:
+          false, // Hides the debug banner in the top-right
       title: 'HOWRU.LIFE', // App title shown in task manager or window
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey, // Sets default colors for app bars, buttons, etc.
+        primarySwatch:
+            Colors.blueGrey, // Sets default colors for app bars, buttons, etc.
       ),
 
       // Routes define named navigation paths for different screens
@@ -52,15 +52,18 @@ class MyApp extends StatelessWidget {
         '/': (context) => const LoginScreen(),
         //'/': (context) => const HomeScreen(), // Default home screen
         '/about': (context) => const AboutScreen(), // About screen
-        '/dashboard': (context) => const DashboardScreen(), // Dashboard with stats and recent reflections
-        '/breathing-exercise': (context) => const BreathingExerciseScreen(), // Breathing exercises for stress relief
+        '/dashboard': (context) =>
+            const DashboardScreen(), // Dashboard with stats and recent reflections
+        '/breathing-exercise': (context) =>
+            const BreathingExerciseScreen(), // Breathing exercises for stress relief
         '/signup': (context) => const SignupScreen(),
         '/login': (context) => const LoginScreen(),
         '/logout': (context) => const LoginScreen(),
         '/faq': (context) => const FaqScreen(), // FAQ Screen
         '/settings': (context) => const SettingScreen(),
         // Placeholder screens for features not implemented yet
-        '/membership': (context) => const PlaceholderScreen(title: 'Membership'),
+        '/membership': (context) =>
+            const PlaceholderScreen(title: 'Membership'),
       },
     );
   }

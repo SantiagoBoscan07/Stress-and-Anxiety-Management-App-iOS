@@ -40,7 +40,7 @@ class MainScaffold extends StatelessWidget {
                       Navigator.pop(context); // Close drawer
                       Navigator.pushNamedAndRemoveUntil(
                         context,
-                        '/',
+                        '/dashboard',
                         (route) => false, // Remove all previous routes
                       );
                     },
@@ -56,7 +56,7 @@ class MainScaffold extends StatelessWidget {
                       Navigator.pop(context); // Close drawer
                       Navigator.pushNamedAndRemoveUntil(
                         context,
-                        '/',
+                        '/dashboard',
                         (route) => false, // Remove all previous routes
                       );
                     },
