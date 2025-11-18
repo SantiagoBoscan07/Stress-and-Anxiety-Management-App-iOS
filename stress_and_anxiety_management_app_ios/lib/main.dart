@@ -1,21 +1,22 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'Screens/HomeScreen.dart';
-import 'Screens/AboutScreen.dart';
-import 'Screens/DashboardScreen.dart';
-import 'Screens/BreathingExerciseScreen.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-
-import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
-import '../Screens/HomeScreen.dart';
-import '../Screens/AboutScreen.dart';
-import '../Screens/LoginScreen.dart';
-import '../Screens/SignUpScreen.dart';
 
-import '../Screens/FaqScreen.dart';
-import '../Screens/SettingScreen.dart';
+import 'Screens/HomeScreen.dart';
+import 'Screens/AboutScreen.dart';
+import 'Screens/LoginScreen.dart';
+import 'Screens/SignUpScreen.dart';
+import 'Screens/DashboardScreen.dart';
+import 'Screens/BreathingExerciseScreen.dart';
+import 'Screens/CalendarScreenWithCallback.dart';
+import 'Screens/SelfReflectionScreen.dart';
+import 'Screens/FaqScreen.dart';
+import 'Screens/SettingScreen.dart';
+import 'Screens/MoodSelectionScreen.dart';
+import 'Screens/ControlGaugeScreen.dart';
+import 'Screens/StressorTypeScreen.dart';
 
 /// Entry point of the Flutter application
 void main() async {
@@ -43,17 +44,33 @@ class MyApp extends StatelessWidget {
           false, // Hides the debug banner in the top-right
       title: 'HOWRU.LIFE', // App title shown in task manager or window
       theme: ThemeData(
-        primarySwatch:
-            Colors.blueGrey, // Sets default colors for app bars, buttons, etc.
+        primarySwatch: Colors.orange,
+        primaryColor: const Color(0xFFFFA726), // Main orange color
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFFFFA726),
+          brightness: Brightness.light,
+          primary: const Color(0xFFFFA726),
+          secondary: const Color(0xFFFFCC02),
+          surface: Colors.white,
+          background: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFFFA726),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
 
       // Routes define named navigation paths for different screens
       routes: {
         '/': (context) => const LoginScreen(),
-        //'/': (context) => const HomeScreen(), // Default home screen
+        '/home': (context) => const HomeScreen(), // Main home screen
         '/about': (context) => const AboutScreen(), // About screen
         '/dashboard': (context) =>
             const DashboardScreen(), // Dashboard with stats and recent reflections
+        '/awareness-questions': (context) =>
+            _AwarenessQuestionsWrapper(), // Calendar selection for new reflections
         '/breathing-exercise': (context) =>
             const BreathingExerciseScreen(), // Breathing exercises for stress relief
         '/signup': (context) => const SignupScreen(),
@@ -61,6 +78,9 @@ class MyApp extends StatelessWidget {
         '/logout': (context) => const LoginScreen(),
         '/faq': (context) => const FaqScreen(), // FAQ Screen
         '/settings': (context) => const SettingScreen(),
+        '/mood-selection': (context) => MoodSelectionScreen(selectedDate: DateTime.now()),
+        '/control-gauge': (context) => ControlGaugeScreen(selectedDate: DateTime.now()),
+        '/stressor-types': (context) => StressorTypeScreen(selectedDate: DateTime.now()),
         // Placeholder screens for features not implemented yet
         '/membership': (context) =>
             const PlaceholderScreen(title: 'Membership'),
@@ -90,6 +110,25 @@ class PlaceholderScreen extends StatelessWidget {
           style: const TextStyle(fontSize: 18),
         ),
       ),
+    );
+  }
+}
+
+/// Wrapper widget that handles the calendar selection to awareness questions flow
+class _AwarenessQuestionsWrapper extends StatelessWidget {
+  const _AwarenessQuestionsWrapper();
+
+  @override
+  Widget build(BuildContext context) {
+    return CalendarScreenWithCallback(
+      onDateSelected: (selectedDate) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SelfReflectScreen(selectedDate: selectedDate),
+          ),
+        );
+      },
     );
   }
 }

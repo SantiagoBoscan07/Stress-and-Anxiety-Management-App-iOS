@@ -16,7 +16,7 @@ class MainScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey, // Assigns the key so NavBar can control drawer
-      backgroundColor: const Color(0xFF708694), // Background color of the screen
+      backgroundColor: Colors.white, // White background color
 
       // NavBar at the top of the screen
       appBar: NavBar(scaffoldKey: _scaffoldKey),
@@ -40,7 +40,7 @@ class MainScaffold extends StatelessWidget {
                       Navigator.pop(context); // Close drawer
                       Navigator.pushNamedAndRemoveUntil(
                         context,
-                        '/dashboard',
+                        '/home',
                         (route) => false, // Remove all previous routes
                       );
                     },
@@ -56,7 +56,7 @@ class MainScaffold extends StatelessWidget {
                       Navigator.pop(context); // Close drawer
                       Navigator.pushNamedAndRemoveUntil(
                         context,
-                        '/dashboard',
+                        '/home',
                         (route) => false, // Remove all previous routes
                       );
                     },
@@ -73,13 +73,59 @@ class MainScaffold extends StatelessWidget {
               ),
             ),
 
-            // Drawer menu items
+            // Main Features
+            _drawerItem(
+              icon: Icons.home,
+              label: 'Home',
+              context: context,
+              onTap: () => _navigateTo(context, '/home'),
+            ),
             _drawerItem(
               icon: Icons.dashboard,
               label: 'Dashboard',
               context: context,
               onTap: () => _navigateTo(context, '/dashboard'),
             ),
+            
+            // Divider for section separation
+            const Divider(color: Colors.white54, thickness: 1, indent: 16, endIndent: 16),
+            
+            // Tools & Exercises
+            _drawerItem(
+              icon: Icons.psychology,
+              label: 'Self Reflection',
+              context: context,
+              onTap: () => _navigateTo(context, '/awareness-questions'),
+            ),
+            _drawerItem(
+              icon: Icons.air,
+              label: 'Breathing Exercise',
+              context: context,
+              onTap: () => _navigateTo(context, '/breathing-exercise'),
+            ),
+            _drawerItem(
+              icon: Icons.mood,
+              label: 'Mood Tracking',
+              context: context,
+              onTap: () => _navigateTo(context, '/mood-selection'),
+            ),
+            _drawerItem(
+              icon: Icons.tune,
+              label: 'Control Gauge',
+              context: context,
+              onTap: () => _navigateTo(context, '/control-gauge'),
+            ),
+            _drawerItem(
+              icon: Icons.psychology_outlined,
+              label: 'Stressor Types',
+              context: context,
+              onTap: () => _navigateTo(context, '/stressor-types'),
+            ),
+            
+            // Divider for section separation
+            const Divider(color: Colors.white54, thickness: 1, indent: 16, endIndent: 16),
+            
+            // Information & Support
             _drawerItem(
               icon: Icons.shopping_cart,
               label: 'Membership',
@@ -87,10 +133,10 @@ class MainScaffold extends StatelessWidget {
               onTap: () => _navigateTo(context, '/membership'),
             ),
             _drawerItem(
-              icon: Icons.settings,
-              label: 'Settings',
+              icon: Icons.question_mark,
+              label: 'FAQ',
               context: context,
-              onTap: () => _navigateTo(context, '/settings'),
+              onTap: () => _navigateTo(context, '/faq'),
             ),
             _drawerItem(
               icon: Icons.info,
@@ -98,11 +144,16 @@ class MainScaffold extends StatelessWidget {
               context: context,
               onTap: () => _navigateTo(context, '/about'),
             ),
+            
+            // Divider for section separation
+            const Divider(color: Colors.white54, thickness: 1, indent: 16, endIndent: 16),
+            
+            // Account
             _drawerItem(
-              icon: Icons.question_mark,
-              label: 'Frequently Asked Questions',
+              icon: Icons.settings,
+              label: 'Settings',
               context: context,
-              onTap: () => _navigateTo(context, '/faq'),
+              onTap: () => _navigateTo(context, '/settings'),
             ),
             _drawerItem(
               icon: Icons.logout,
