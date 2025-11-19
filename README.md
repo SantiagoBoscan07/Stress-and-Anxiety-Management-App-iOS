@@ -34,7 +34,7 @@ Stress-and-Anxiety-Management-App-iOS/
 │ ├── components/ # Reusable UI components (buttons, cards, widgets)
 │ ├── database/ # Storage, data models, and services for logs and entries
 │ ├── screens/ # Screens for each activity (reflection, mood, breathing, diary)
-│ ├── viewmodel/ # Utility functions, helpers, theming, constants
+│ ├── viewmodel/ # State management, logic handlers, and helpers
 │ └── main.dart # Entry point of the Flutter application
 │
 ├── test/ # Unit and widget tests
