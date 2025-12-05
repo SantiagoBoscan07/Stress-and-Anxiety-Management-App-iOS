@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../Components/MainScaffold.dart';
 import '../Database/LocalDatabase.dart';
+import '../Screens/CalendarScreenWithCallback.dart';
+import '../Screens/SelfReflectionScreen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -300,7 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: _buildQuickActionCard(
                 'New Reflection',
                 Icons.add_circle_outline,
-                () => Navigator.pushNamed(context, '/awareness-questions'),
+                () => _showDateSelectionDialog(),
               ),
             ),
             const SizedBox(width: 16),
@@ -348,6 +350,112 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showDateSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF2F3941),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Text(
+            'When would you like to reflect?',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Choose to reflect on today\'s experiences or select a different date.',
+                style: TextStyle(
+                  color: Colors.white70,
+                  fontSize: 16,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.maxFinite,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _navigateToReflection(DateTime.now());
+                  },
+                  icon: const Icon(Icons.today, color: Colors.white),
+                  label: const Text(
+                    'Use Today\'s Date',
+                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF546E7A),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    _navigateToCalendarSelection();
+                  },
+                  icon: const Icon(Icons.calendar_month, color: Colors.white70),
+                  label: const Text(
+                    'Choose Different Date',
+                    style: TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.white70),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _navigateToReflection(DateTime selectedDate) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SelfReflectScreen(selectedDate: selectedDate),
+      ),
+    );
+  }
+
+  void _navigateToCalendarSelection() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CalendarScreenWithCallback(
+          onDateSelected: (selectedDate) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => SelfReflectScreen(selectedDate: selectedDate),
+              ),
+            );
+          },
         ),
       ),
     );

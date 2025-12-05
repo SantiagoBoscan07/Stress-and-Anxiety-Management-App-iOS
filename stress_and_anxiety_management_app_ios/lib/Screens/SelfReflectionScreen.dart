@@ -101,26 +101,18 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
           ),
         );
       }
-      if ([whoValue, whatValue, whenValue, whereValue, whyValue]
-          .any((v) => v == null || v.isEmpty || v == "Select a question...")) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Please answer all questions!"),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+      return; // Exit early if validation fails
+    }
 
-      // Show loading indicator
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) =>
-        const Center(child: CircularProgressIndicator(color: Colors.white)),
-      );
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) =>
+      const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
 
-      try {
+    try {
         await dbHelper.insertReflection(
           who: whoValue!,
           what: whatValue!,
@@ -169,7 +161,7 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
                           Navigator.pop(context); // Dismiss dialog
                           Navigator.pushNamedAndRemoveUntil(
                             context,
-                            '/',
+                            '/home',
                                 (route) => false,
                           ); // Navigate to home and clear stack
                         },
@@ -221,7 +213,6 @@ class _SelfReflectScreenState extends State<SelfReflectScreen> {
           );
         }
       }
-    }
   }
 
   Future<void> deleteReflectionsForSelectedDate() async {
