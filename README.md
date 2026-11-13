@@ -1,51 +1,150 @@
-**Stress and Anxiety Management App (iOS)**
+# With Me
 
-This application was developed as part of a Florida International University Capstone II Project with the goal of helping users manage stress and anxiety through daily activities. 
-The app provides an easy-to-use interface and includes tools designed to encourage mindfulness, emotional awareness, and consistent self‑care habits.
+**Here. With you.**
 
-**Overview**
+With Me is a friendly companion app for a short daily wellbeing check-in. An animated companion greets you, asks how your day is going, notices what is weighing on you, and suggests a small step that helps, like a breathing exercise. Over time the calendar and progress screens show how your days have been.
 
-The Stress and Anxiety Management App enables users to engage in a variety of wellness activities, each with its own daily logging system supported by a built‑in calendar view. The core features include:
+It is built for HR Vision Consulting as the Florida International University Computer Science capstone (CIS 4951, Fall 2026).
 
-**Reflection Questions:** Users answer daily reflective prompts to better understand thoughts and emotions.
+Website for people using the app (Privacy Policy, Terms of Use, Delete your account): https://quangho138.github.io/With-Me/ (built from `docs/` on `develop` by GitHub Pages).
 
-**Mood Tracker:** Record mood entries each day to visualize emotional trends over time.
+## What With Me is, and is not
 
-**Breathing Exercises:** Guided breathing activities to help users calm their mind and reduce stress.
+- It is a **coach and friend**: a calm daily routine that helps people notice how they feel and take one small helpful step.
+- It is **not a therapist** and **not a chatbot**. It gives no medical advice and does not diagnose anything.
+- The Help screen tells anyone in crisis what to do, by the phone's country: in the US, call or text 988, or call 911; everywhere else, the local emergency number and findahelpline.com.
 
-**Diary:** A simple journaling tool that allows users to document their day or express feelings freely.
+## What you can do
 
-Each activity integrates with a calendar-based logging system, enabling users to track their participation and view past entries.
+- **Daily check-in**: mood, stress level, motivation, where the stress comes from, how it shows up (body, feelings, mind or behavior), readiness to change, a strategy and action, and a rating. About ten short pages, on a painted beach scene with the companion reacting to your answers.
+- **Check In (the five W's)**: a short reflection: who, what, when, where, why.
+- **Calendar and day detail**: every checked-in day is marked, and tapping a day shows what you answered.
+- **Progress and dashboard**: stress and mood trends over 7, 30 and 365 days, and where stress comes from.
+- **Immediate exercises**: 4-7-8 breathing, 4-4-4 focus breathing, 4-4-4-4 box breathing, and the physiological sigh (one deep inhale, one quick inhale, a long exhale), with optional nature video and sound.
+- **Meditation and With Me Plus** ($3.99 a month or $39.99 a year): ten-minute sessions by stress area (Home, Work, School, Social), each with six versions, plus Anxiety SOS, Guided Meditation, Body Scan and Muscle Relaxation. Without Plus: version 1 of each area, and one free try of each of the other four, kept per account. The scripts are by Prof. Seyedmasoud Sadjadi, used with permission. Plus is kept by the server and only the server gives it. With Me Plus is bought through Google Play and checked by the server; see [docs/PAYMENTS.md](docs/PAYMENTS.md). The ten-minute sessions download their recorded voice the first time; the phone's voice is the backup.
+- **Accounts**: sign up (with email confirmation), log in with email or Google and stay logged in, reset a forgotten password, or start without an account. One account per phone. Passwords are checked online and never stored on the phone.
+- **Languages**: 22 languages under Menu, Settings, Language, or the phone's own language when the app has it (English otherwise). The companion speaks in Adrian's recorded voice in 13 of them and uses the phone's voice in the rest. Answers are always saved in English, so sync, export and the dashboard work the same in every language. Details: `with_me/lib/l10n/README.md`. To add a language or its voice: `docs/ADDING_A_LANGUAGE.md`.
+- **Profile and settings**: your name, your check-in and exercise counts, App volume, Soft sounds, Haptics, Text size, Read aloud and its voice, "Export my data" (one JSON file, ready to import elsewhere), and "Delete my account", which deletes the account online and everything on the phone.
 
-The app is developed using Flutter, with full support for iOS devices.
+## How it is built
 
-**Directory Structure**
+Flutter (Dart), one codebase for Android, iOS, web, Windows, macOS and Linux.
 
-Stress-and-Anxiety-Management-App-iOS/
-│
-├── assets/
-│ ├── animations/ # Lottie or animated assets used in the UI
-│ ├── icons/ # Icon assets for buttons, UI elements, and sections
-│ └── images/ # Static images and graphics used throughout the app
-│
-├── ios/ # iOS platform-specific project files generated by Flutter
-│
-├── lib/
-│ ├── components/ # Reusable UI components (buttons, cards, widgets)
-│ ├── database/ # Storage, data models, and services for logs and entries
-│ ├── screens/ # Screens for each activity (reflection, mood, breathing, diary)
-│ ├── viewmodel/ # State management, logic handlers, and helpers
-│ └── main.dart # Entry point of the Flutter application
-│
-├── test/ # Unit and widget tests
-│
-├── pubspec.yaml # Flutter dependencies, assets, and metadata
-└── README.md # Project documentation
+The app has three layers, and each only talks to the one below it:
 
-**Tech Stack**
+```
+Screens        what you see           lib/WithMe/
+   |
+Repositories   save and load data     lib/Repositories/
+   |
+Database       stores it (SQLite)     lib/Database/
+```
 
-**Flutter:** Cross‑platform UI framework
+- **Screens** never touch the database. They ask `AppRepositories` for what they need. A test checks this rule.
+- **Repositories** are the only code that knows how data is stored. This is what will let login and syncing move to a server later without changing any screen.
+- **Database**: SQLite on the device (in the browser, SQLite in IndexedDB). With an account, the data also syncs to Supabase (see Data and privacy).
 
-**Dart:** Primary programming language
+## Folder map
 
-**Git:** Version Control
+```
+README.md              this file
+docs/                  design, backend and exercise notes
+tool/                  Python helpers for design captures and mascot art
+supabase/              online tables, security rules and their check (SQL)
+with_me/               the Flutter app
+  lib/
+    main.dart          app start and routes
+    Database/          SQLite setup, schema versions, demo account
+    Repositories/      check-ins, journal, users, exercises (the data layer)
+    WithMe/
+      Screens/         every screen
+      Components/      shared pieces (scenic layout, cards, charts, controls)
+      Mascot/          the companion: drawing, poses, expressions
+      Exercise/        breathing timing, nature video and sound
+      Data/            check-in questions and answer options
+      Theme/           colors, type and spacing
+  assets/              fonts, mascot art, V2 scenery, audio, video
+  test/                unit, widget and backend tests
+    backend/           data layer and saving tests
+```
+
+## Run it
+
+You need Flutter (stable) and, for Android, JDK 17.
+
+```
+cd with_me
+flutter pub get
+flutter run
+```
+
+Useful targets:
+
+- `flutter run -d chrome`: quick look in the browser (data resets on each run).
+- `flutter run -d web-server --web-port=8080`, then open localhost:8080 in Chrome: browser data survives restarts.
+- `flutter run -d emulator-5554` (or your device id): Android.
+
+Build switches (add to `flutter run` or `flutter build`; store builds use none of them):
+
+| Switch | What it does |
+|---|---|
+| `--dart-define=WITHME_DEV=true` | A small "Plus on / Plus off" switch at the top right of "Choose an exercise", to try the meditation with and without With Me Plus on this phone only. |
+| `--dart-define=WITHME_DEMO=true` | Adds a sample week of made-up check-ins for a demo. Never sign up in a demo build: the sample days would go into the account. |
+
+## Build it for Google Play
+
+See [docs/RELEASE.md](docs/RELEASE.md): the upload key (never in the repo), the version number, and `flutter build appbundle --release`.
+
+## Test it
+
+```
+cd with_me
+flutter test
+```
+
+- `test/backend/` checks saving, the data layer, database upgrades and "delete my account".
+- Other tests walk the check-in, the exercises and the main screens.
+- Screenshot tests are skipped by default. Run them with `flutter test --tags golden --run-skipped --update-goldens`.
+
+## App identity
+
+| | |
+|---|---|
+| App name | With Me |
+| App id (Android, iOS, macOS, Linux) | com.withme.companion |
+| Dart package | with_me |
+| Database file on the device | with_me.db |
+
+## Data and privacy
+
+- Without an account, everything stays on the device.
+- Accounts are online (Supabase). Passwords are checked there and never stored on the phone.
+- With an account, check-ins, the journal, finished exercises and the name sync to the account, so they follow you to another phone. The newest edit of a day wins. The journal holds no written text, only the question picked for each of the five W's.
+- Logging out clears the phone. Check-ins and the journal come back on the next login. If something has not reached the account yet (offline), the app warns first.
+- During the course, only made-up test data is used, never real personal data.
+- The Privacy Policy and Terms of Use are in the app (Settings, Privacy & data; About) and on the website.
+- Details in `docs/BACKEND.md` and `supabase/`.
+- Every third-party package, font, clip, model and online service, with its licence, plus the data boundary and ethics notes: `docs/THIRD_PARTY_AND_REFERENCES.md`.
+
+## Working on it
+
+- `main` keeps the original app from the previous team, unchanged, for reference.
+- `develop` is the live app. All work goes there through pull requests.
+- Start every branch from the latest `develop`, keep it to one task, merge it, then delete it.
+- Before changing a check-in question, a scale, or a screen's save call, tell the backend owner.
+
+## Team
+
+- **Quang**: the whole backend (data layer, accounts, sync, reminders, With Me Plus) and the graded core features
+- **Bhavesh**: UI lead (screens and the V2 design)
+- **Alex**: front end (check-in, dashboard, read aloud, talking companion, meditation screens, app icons), and Adrian's voice
+- **Miguel**: exercises
+- **Gabriel**: team member (rewards and streaks were dropped on 19 Oct)
+
+Product owner: HR Vision Consulting.
+
+## Background and AI use
+
+With Me grew out of an earlier FIU capstone app for stress and anxiety management, which is kept on the `main` branch. This team rebuilt it around the product owner's companion vision.
+
+The course encourages declared AI use. Parts of this project were written with AI assistants (Claude) and reviewed and tested by the team. Each change records what the AI did, what was kept, what was checked, and what it got wrong.
