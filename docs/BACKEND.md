@@ -1,0 +1,317 @@
+# WITH ME backend
+
+Owner: Quang. This file grows one section per stage.
+
+## Stage 1: save what the app asks (branch backend/save-data)
+
+Problem: the daily check-in asked ten questions but saved only three (mood, stress, stressors). Finished exercises were not saved at all. Editing a check-in added a second stressor row for the same day. "Delete my account" only removed the journal and the name.
+
+What changed:
+
+- Database version 3 to 4 (lib/Database/LocalDatabase.dart):
+  - new table check_in_details, one row per day: motivation, readiness, intention, strategy, action, rating.
+  - new table exercise_sessions, one row per finished session: exercise, pattern, cycles, sound.
+  - stressors: old duplicate rows are removed (the newest row of each day is kept) and a unique index allows only one row per day from now on.
+  - deleteAllData empties every table, listed in DatabaseHelper.userDataTables.
+- The data layer starts here (lib/Repositories):
+  - CheckInRepository.save saves the whole check-in in one transaction. Answers left empty keep what was saved earlier that day, so changing one answer from the calendar never erases the others.
+  - ExerciseRepository records finished sessions and reads them back by date range.
+- Screens (small, marked changes in the teammate's files):
+  - DailyCheckInScreen._save now calls the repository instead of the database.
+  - BreathingScreen and SighScreen record a session when it completes. A failed save never interrupts the exercise.
+
+Success criteria, all in test/backend/save_data_test.dart:
+
+1. A fresh install and an upgraded version 3 install end with the same schema, and the upgrade keeps existing data.
+2. Every check-in answer is saved.
+3. Changing one answer later keeps the others.
+4. A day has exactly one stressor row however often it is edited.
+5. Finished exercises are recorded and read back.
+6. Delete my account leaves every table empty, and a new table cannot be forgotten.
+
+Run: `flutter test test/backend`
+
+Not in this stage: showing the new data on the progress screen (UI), password hashing and accounts (stage 3).
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the schema change, repositories, screen hooks, tests and this doc.
+2. What was kept: the existing tables and date format, the calendar's rules, the repository shape from the project's repository-starter doc.
+3. What was checked: Claude read every screen that saves data to find what was dropped. Flutter could not run in Claude's workspace, so the tests are first run by Quang.
+4. What it got wrong or left open: an SQL "upsert" would be shorter but older Android phones do not support it, so the repository updates then inserts. Screens other than the check-in still call the database directly; moving them is stage 2.
+
+## Stage 2: the data layer (branch backend/data-layer)
+
+Problem: about 14 screens each talked to the database themselves, so any change to how data is stored meant editing many UI files, and none of it could be tested on its own.
+
+What changed:
+
+- Every screen now gets data from lib/Repositories through one place, AppRepositories:
+  - CheckInRepository: saving (stage 1) plus the reads the calendar, progress, dashboard, triggers and day screens use.
+  - ReflectionRepository: the five W's journal ("Check In"). Never leaves the phone.
+  - UserRepository: sign up, sign in, display name, delete account and data.
+  - ExerciseRepository: finished exercises (stage 1).
+- Screens changed only where they called the database: the same data, asked for through a repository. No layout changes.
+- Small fixes that came with it:
+  - Sign-up saves the account and the name together (before, a failure between the two left half an account).
+  - Saving today's reflection replaces the old one in one step (before, a failure could delete it without saving the new one).
+  - The profile's "exercises" count now counts real finished exercises. Before, it counted journal entries because nothing else was saved.
+  - "Delete my account" now tells the user if it fails, instead of failing silently.
+  - The demo account seeds its week through the repositories too.
+- The old DatabaseHelper methods are still there but no screen uses them. They can be removed later.
+
+Success criteria, in test/backend/data_layer_test.dart:
+
+1. No file under lib/WithMe imports the database (checked by scanning the code).
+2. Each repository returns what the screens relied on, on a real in-memory database with synthetic data.
+3. Sign-up saves account and name together; a day's reflection is replaced, never doubled.
+
+Why this matters for stage 3: login moves to hashed passwords and later a server by changing UserRepository only. AppRepositories is the one line to switch.
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the repositories, screen changes, tests and this section.
+2. What was kept: every screen's layout and behavior, the old query logic (moved, not rewritten), the repository shape from the project's repository-starter doc.
+3. What was checked: every DatabaseHelper call in lib/WithMe was found and replaced; a test enforces it stays that way. Tests first run by Quang.
+4. What it got wrong or left open: reads keep returning the same map shapes the screens already used, rather than cleaner typed objects, to avoid touching UI code; that can improve later. Passwords are still plain text until stage 3.
+
+## Stage 3, part 1: accounts on the phone (branch backend/accounts-local)
+
+Problem: passwords were saved as plain text. Nothing remembered who was signed in, so every start began at the welcome screen. "Log out" only changed the screen. The app could not be used without an account.
+
+Decisions (Quang, 1 Oct):
+
+- One account per phone. Check-ins belong to the phone, so a second account would mix two people's data.
+- "Start without an account" shows only on a phone with no account. After logging out, nobody can reach the data that way.
+- A guest who signs up keeps everything saved so far.
+- Logging out keeps the data on the phone. Logging back in shows it again.
+- Later, with Supabase: signing in to an account that already has data (for example from another phone) replaces what is on this phone, with a warning first if there is guest data that would be lost.
+
+What changed:
+
+- Database version 4 to 5 (lib/Database/LocalDatabase.dart):
+  - users is rebuilt with password_hash instead of password. Old logins are removed, so people sign up again; check-ins, journal and name are kept.
+  - new table session: one row at most. Email set = signed in, email empty = without an account, no row = nobody.
+  - session is on the delete-everything list.
+  - the old plain-text helpers insertUser and getUser are removed (no screen used them).
+- lib/Repositories/password_hasher.dart: a random salt per password, then PBKDF2 with SHA-256, 20,000 rounds. Stored as one line that names its method and rounds, so the rounds can be raised later.
+- UserRepository: hasAccount, session, startAsGuest, signOut. signUp refuses a second account and signs in. Emails are compared without capitals or spaces.
+- Screens (small, marked "Backend (stage 3)"):
+  - main.dart opens on Home when someone is signed in or using the app without an account.
+  - Welcome: a "Start without an account" link, only on a phone with no account.
+  - Menu: "Log out" really logs out. A guest sees "Create an account" there instead.
+  - Create account: says "This phone already has an account. Log in instead." when needed.
+- The demo account (browser) is created logged out, and skipped if the phone already has someone else's account.
+- New package: crypto (it was already in the project through another package).
+
+Success criteria, in test/backend/accounts_test.dart:
+
+1. Passwords are never stored as typed; the right one signs in, a wrong one does not; the hashing matches a published test value (RFC 7914).
+2. The app remembers who is signed in; logging out forgets it and keeps the data.
+3. One account per phone.
+4. "Start without an account" works only with no account, and a guest who signs up keeps their check-ins.
+5. Upgrading from version 4 removes the old logins and keeps everything else.
+
+Not in this part: Supabase login and sync, Google sign-in, real password reset (needs a server to send email).
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the schema change, hasher, repository, screen hooks, tests and this section.
+2. What was kept: the repository shape, every screen's layout (one link and one menu row added), the existing sign-in error messages.
+3. What was checked: the hashing steps were compared with Python's built-in PBKDF2 at 20,000 rounds and with the RFC 7914 value. Flutter could not run in Claude's workspace, so the tests are first run by Quang.
+4. What it got wrong or left open: 20,000 rounds is below what servers use, chosen so sign-in stays quick in the browser; the data on the phone itself is not encrypted, so the password guards the app, not the file. Supabase will own passwords later.
+
+## Stage 3, step 2a: online tables and security rules (branch backend/supabase-schema)
+
+Goal: an online copy for people with an account, so their check-ins follow them to a new phone, while one user can never see another user's data.
+
+Decisions (Quang):
+- Supabase project in East US. Automatic security rules (RLS) turned on for every new table.
+- The journal stays on the phone. There is no online table for it.
+- Custom strategy and action text syncs. It is a preference the app does not offer yet, not personal detail. Limited to 200 characters.
+- Team members get their own Supabase login through the organization. The database password and secret key are never shared or committed.
+
+What changed (no app code yet; this is the server side):
+- supabase/migrations/20261012000000_online_tables.sql:
+  - profiles: display name, made automatically at sign-up from the name the app sends.
+  - check_ins: one row per account per day with every check-in answer. Online keeps stress as the person answered (the phone stores 6 - stress).
+  - exercise_sessions: one row per finished exercise. The id is made on the phone, so a repeated upload can never count a session twice.
+  - Every row has updated_at (sync keeps the newest edit) and deleted (so a removal reaches other phones).
+  - Every table: you can only read, add, change or remove rows where user_id is you. Signed-out visitors have no access at all.
+  - Answers outside the app's scales are refused (for example stress must be 1 to 5).
+  - Deleting an account removes all its rows.
+- supabase/tests/security_check.sql: two made-up users; checks every rule above, then rolls back.
+
+Success criteria: security_check.sql ends with "All security checks passed" on the real project.
+
+Not in this step: the app talking to Supabase (2b login, 2c sync), delete and export from the app (2d), Google sign-in (2e).
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the SQL, the check script and this section.
+2. What was kept: the phone's existing answers and scales, the local-first design in sync-design-and-review.md, Supabase's recommended rule form.
+3. What was checked: both files were run on a local PostgreSQL 16 set up like Supabase (auth schema, anon and authenticated roles). The checks passed, and were then shown to fail when a rule was deliberately broken (open reading, open adding, RLS turned off). First run on the real project by Quang.
+4. What it got wrong or left open: the local copy only imitates Supabase's auth schema, so the real run is the true test. Times come from the phone's clock, so a phone with a wrong clock could win a sync it should lose; acceptable for now.
+
+## Stage 3, step 2b: log in with Supabase (branch backend/supabase-login)
+
+Goal: real online accounts, so later steps can keep a person's check-ins online and on every phone they use.
+
+Decisions (Quang):
+- Email confirmation on: a new account works after the link in the email is tapped. Until a deep link is set up (planned together with "forgot password"), the link may open a browser page that looks broken; the account is still confirmed, and the person goes back to the app and logs in.
+- The written "Other" answers from Alex's update sync too, like the custom strategy and action (100 characters each).
+
+What changed:
+- Login and sign-up go to Supabase. Passwords are no longer stored on the phone at all; the part 1 password scrambling (PBKDF2) is removed because Supabase does it now.
+- lib/Repositories/online_auth.dart: a small OnlineAuth interface and its Supabase version. Every error becomes one clear message (wrong password, email not confirmed, email already used, password too short, no internet, too many tries).
+- AppUserRepository (replaces LocalUserRepository): same rules as part 1. One account per phone: the phone remembers the account from its first login; another account cannot log in on it (stage 2c will offer to replace the data instead). A guest who signs up, confirms and logs in keeps their check-ins. Logging out keeps the data.
+- Phone database version 7: users only keeps which online account the phone belongs to (user_id, email). Accounts from part 1 existed only on one phone, so they are removed; people sign up again online. Check-ins, journal and name are kept.
+- lib/Config/supabase_config.dart: the project URL and publishable key (safe to commit). The secret key and database password are never in the repo.
+- main.dart starts Supabase before the first screen; it only reads the saved login, so the app still opens offline.
+- Android release builds get the internet permission; macOS gets network access.
+- The browser demo no longer has a login (it would need a real online account). Its sample week is saved as "without an account" data.
+- supabase/migrations/20261013000000_check_in_extras.sql: online columns for Alex's new answers (perceived control, written "Other" answers, which signs page). security_check.sql checks their limits.
+- Screens never use Supabase directly; the data layer test now checks that too.
+
+Success criteria, in test/backend/accounts_test.dart (online side is a fake, no internet):
+1. No password stored on the phone.
+2. Sign-up needs the email confirmed; each failure gives its own message.
+3. Logged-in state is remembered; logging out keeps the data.
+4. One account per phone, including logging in to a different existing account.
+5. A guest keeps their check-ins after signing up and logging in.
+6. Upgrading from version 6 removes phone-only accounts and keeps the rest.
+Plus by hand on the emulator: sign up with a real email, tap the link, log in.
+
+Not in this step: syncing check-ins (2c), deleting the online account and export (2d), Google (2e), forgot password and the deep link.
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the code, tests, SQL and this section.
+2. What was kept: the UserRepository shape (screens barely change), part 1's rules, Alex's check-in work.
+3. What was checked: the SQL ran on a local PostgreSQL set up like Supabase, with the security checks passing. Flutter could not run in Claude's workspace, so the Dart tests and the real login are first run by Quang.
+4. What it got wrong or left open: the Supabase error codes were written from Supabase's documented codes, with a fallback on the message text; if a real error shows "Something went wrong", tell Claude the case so it can be mapped. Removing part 1's password scrambling means that work only lived for one step; it was planned as a stepping stone.
+
+## Stage 3, step 2c: sync (branch backend/sync)
+
+Goal: a person's check-ins, exercises and name follow their account to every phone, while the app keeps working offline.
+
+Decisions (Quang):
+- The phone stays the main copy. Screens always read the phone; sync runs in the background, only for people logged in to an account. Guests never sync.
+- Newest edit of a day wins, decided on the server.
+- After logging in: if the phone has check-ins (for example from using it without an account) and the account already has its own, the person chooses "Add them" or "Discard". If the account is empty, they are added without asking.
+- Logging out clears the phone. Check-ins come back on the next login. The journal never goes online, so it is deleted, after a warning. If changes are still waiting (offline), a second warning says they would be lost.
+
+How it works:
+- Phone database version 8: sync_days (each day with answers: when it was changed here, and whether that still has to be uploaded), exercise_sessions.uuid and .pending, sync_state (where each download stopped; whether the name has to be uploaded). Days saved before this are marked to upload, with an old time so they never replace a newer edit already online.
+- Saving a check-in, finishing an exercise or changing the name marks it.
+- SyncService (lib/Repositories/sync_service.dart): uploads marked days, exercises and the name, then downloads whatever the server received since the last download, unless the phone has a newer edit of that day. One run at a time; a request during a run makes it run once more afterwards.
+- When: when the app starts, when it comes back to the front, after each check-in, and right after login.
+- Server (supabase/migrations/20261014000000_sync.sql): synced_at on every table, set by the server's own clock on each write. Downloads ask "what changed since synced_at X", so a phone with a wrong clock, or one that uploads days late, can never make its changes invisible to other phones. upload_check_ins and save_display_name keep the newest edit. Both run as the signed-in user, so the security rules still apply.
+- Offline is fine: marks stay until an upload succeeds.
+
+Success criteria, in test/backend/sync_test.dart (online side is a fake server with the same rules):
+1. A check-in reaches the account and a second phone with every answer.
+2. The newest edit wins on both phones, whichever syncs first.
+3. Offline, changes wait and go up on the next try.
+4. An exercise is uploaded once and arrives on the other phone once.
+5. Guests never sync.
+6. Guest check-ins go up when the account is empty; add and discard both work when it is not.
+7. Logging out clears the phone, journal included; logging back in brings the check-ins back, never the journal.
+8. The name follows the account.
+9. Upgrading the phone database marks existing days and gives exercises ids.
+security_check.sql also checks that an older upload never replaces a newer edit, that uploads only reach your own rows, and that signed-out visitors cannot upload.
+
+Not in this step: deleting the online account and export (2d), Google (2e). Open screens refresh after a download only through the dashboard's existing reload.
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the code, tests, SQL and this section. A second Claude agent reviewed the code for compile errors and test logic; it found one schema test that needed updating, which was fixed.
+2. What was kept: the local-first design in the project's sync notes, Alex's check-in saving (moved into writeEntry, unchanged), the repository shape.
+3. What was checked: the SQL ran on a local PostgreSQL set up like Supabase, including newest-wins and the server time stamp. Flutter could not run in Claude's workspace; the Dart tests and the two-phone test are first run by Quang.
+4. What it got wrong or left open: when two phones edit the same day, the whole day is taken from the newer edit, not answer by answer. If the "add or discard" check cannot reach the internet right after login, the phone's check-ins are kept and added later.
+
+## Stage 3, step 2d: delete my account and export my data (branch backend/delete-export)
+
+Decisions (Quang):
+- Export is one JSON file, made for importing into With Me or another app later, not for reading raw. It says what it is ("format": "with-me-export") and its layout version, so a future import can trust it.
+
+Delete my account:
+- With an account: deletes the online account first (all its online rows go with it), then clears the phone and logs out. Needs the internet: offline, it says why and deletes nothing, so the account is never left online while the phone thinks it is gone.
+- Without an account: clears the phone, as before.
+- Server: supabase/migrations/20261015000000_delete_account.sql adds delete_my_account(). It only ever deletes the account in the caller's own login (auth.uid()); signed-out visitors cannot call it. security_check.sql proves A deleting their account leaves B untouched.
+
+Export my data (Settings):
+- Syncs first when there is an account (offline is fine), then builds the file from the phone: name and email, every check-in day with every answer, finished exercises, and the journal (it never goes online, but it is the person's). No passwords (none on the phone) and no sync bookkeeping.
+- On a phone the file goes to the share menu (save to Files, send by email...). In the browser it downloads. New package: share_plus.
+
+Success criteria:
+- test/backend/export_test.dart: versioned layout, every answer, exercises, journal and name present, commas kept inside written answers, nothing secret.
+- test/backend/accounts_test.dart: deleting removes the online account (it can no longer log in) and then the phone; offline deletes nothing; a guest's delete never goes online.
+- security_check.sql: "All security checks passed".
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the SQL, code, tests and this section.
+2. What was kept: the Settings layout and dialog, the existing delete flow (now online first).
+3. What was checked: the SQL ran on a local PostgreSQL set up like Supabase; the check passes and fails when delete_my_account is deliberately broken to delete everyone. Dart tests first run by Quang.
+4. What it got wrong or left open: sharing a file in the browser depends on the browser; if it does nothing there, tell Claude. There is no import yet; the file is ready for one.
+
+## Stage 3, step 2e: deep link, forgot password, Google sign-in (branch backend/google-reset)
+
+Decisions (Quang):
+- Google sign-in uses Google's page in a browser sheet (Supabase OAuth), not the phone's native account picker: one Google key, the same code on Android, iOS and web, and it reuses the deep link.
+
+Deep link (com.withme.companion://login-callback):
+- Set up in AndroidManifest.xml (intent filter) and ios/Runner/Info.plist (URL type). Flutter's own deep link router is turned off there, because Supabase reads the link itself.
+- Email confirmation links, reset links and the return from Google open the app. In the browser build the page's own address is used instead.
+- OutsideLoginListener (around the whole app, main.dart) finishes these logins with the same rules and steps as the login screen (AfterLogin.dart): link the phone (refused if it is another account's phone), ask add-or-discard if needed, sync, go Home. Logins made by the app's own screens are not handled twice.
+
+Forgot password:
+- "Reset your password" now sends a real email. Its link opens "Set a new password" (new SetNewPasswordScreen, plain scenic layout for Bhavesh to restyle). Saving logs the person in.
+
+Google:
+- "Continue with Google" on the welcome screen. The first Google sign-in creates the account. supabase/migrations/20261016000000_google_names.sql gives Google accounts a name from Google's "full_name".
+- Future note: Apple's App Store requires "Sign in with Apple" next to Google sign-in. Not needed for the capstone or Android.
+
+Setup outside the code (done in the dashboards, nothing secret in the repo):
+- Google Cloud: an OAuth client of type "Web application" with the authorized redirect URI https://mgahvsbczqcihatdrbyj.supabase.co/auth/v1/callback; test users added while the app is in testing.
+- Supabase, Authentication, Sign In / Providers, Google: client ID and secret pasted there.
+- Supabase, Authentication, URL Configuration, Redirect URLs: com.withme.companion://login-callback and the browser address used for testing (http://localhost:8080).
+
+Success criteria, in test/backend/accounts_test.dart (fake online login):
+1. Google's first sign-in links the phone and keeps guest data; reported once.
+2. After the login screen, an outside login report changes nothing.
+3. Google cannot log in on another account's phone.
+4. Forgot password: empty email refused, link sent, short password refused, new password works and the old one does not.
+Plus security_check.sql: a Google sign-up gets its name. By hand: tap a real confirmation link and a reset link on the emulator; sign in with Google.
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the code, tests, SQL and this section.
+2. What was kept: the welcome, login and reset screens' layouts (buttons now do real work), the login rules from steps 2b and 2c.
+3. What was checked: SQL on a local PostgreSQL set up like Supabase. Flutter could not run in Claude's workspace; Dart tests and the real links are first run by Quang.
+4. What it got wrong or left open: a link opened on a different device than the one that asked for it (for example the email opened on a laptop) confirms the email but cannot log the phone in; the person logs in by hand. The Supabase login events were written from its documentation.
+
+## Journal sync (branch backend/journal-sync)
+
+Problem: the journal ("Check In", the five W's) stayed on the phone only, so logging out deleted it and a second phone never saw it. Quang decided on 19 Oct 2026 that it should sync. Earlier docs called the journal "free writing, the most private thing in the app". That was never true: the screen (and the original app's Self Reflection screen on main) only lets you pick one question from a fixed list for each W (kReflectionPrompts in lib/WithMe/Data/CheckInSteps.dart). There is no text box. So the journal is about as private as the stressor tags, which already sync, and plain sync with the same security rules is enough. Encrypting it was considered and left out: worth it only if the journal ever gets written answers.
+
+What changed:
+- Online: a journal_entries table, one row per account per day, with the same rules as check_ins (Row Level Security, own rows only, nothing for signed-out visitors, deleted with the account) and an upload_journal function where the newest edit wins on the server. supabase/migrations/20261019000000_journal.sql. Run it once in the SQL Editor, then run tests/security_check.sql again.
+- Phone database version 10: sync_journal marks which journal days still have to be uploaded, like sync_days for check-ins. Journal days saved before the upgrade are marked with an old time, so they upload but never replace a newer edit online.
+- Saving a journal entry marks its day and starts a sync.
+- SyncService uploads and downloads journal days on their own, separate from the check-in of the same day, so editing one never overwrites the other.
+- "Add or discard" after login now covers the journal too. Discard removes the phone's journal as well as its check-ins.
+- Log out no longer deletes the journal for good: it is in the account and comes back on the next login. The warning text changed to say so.
+- Guests still never sync.
+- Only questions from the fixed lists are ever sent online. Alex's demo days write a short note into the journal, and an old test build could hold other text; sync sends those fields as empty and the text stays on the phone. To make this possible the question lists moved from lib/WithMe/Data/CheckInSteps.dart to lib/Repositories/journal_prompts.dart (CheckInSteps re-exports them, so screens did not change).
+
+Success criteria, in test/backend/sync_test.dart (fake server with the real rules):
+1. A journal day reaches the account and a second phone with all five picked questions.
+2. When two phones edit the same day's journal, the newest edit wins on both, whichever syncs first, and the day keeps one entry.
+3. Offline, a journal edit waits and goes up later.
+4. Guests never sync the journal.
+5. A journal edit on one phone never overwrites that day's check-in.
+6. A guest's journal: "discard" removes it, "add" keeps both days.
+7. Upgrading from version 9 marks existing journal days to upload, with an old time.
+8. Log out and log in brings the journal back.
+9. Written text never goes online: every value sent is one of the fixed questions or empty, and the phone keeps its own copy.
+Plus security_check.sql: one user can never read, add or change another's journal, an older upload never replaces a newer one, signed-out visitors get nothing, and deleting an account removes its journal.
+
+AI provenance:
+1. Tools used: Claude (Opus 5.5, Cowork) wrote the SQL, code, tests and this section.
+2. What was kept: the sync rules from step 2c (phone is the main copy, server clock decides what is new, newest edit wins, guests never sync), the journal screens and the export.
+3. What was checked: the SQL and security_check.sql on a local PostgreSQL set up like Supabase (all checks passed, and the journal check fails when its security rule is turned off); the journal screen and the original app's screen, to confirm there is no free text. Flutter could not run in Claude's workspace, so the Dart tests are first run by Quang.
+4. What it got wrong or left open: the earlier docs, code comments and Claude's own explanations called the journal free writing without checking the screen; corrected here. The first draft of this change would have uploaded the demo days' free-text notes and could have stopped sync on old rows with no date; a second Claude agent's review caught both, and both are fixed (picked questions only; rows with no date are skipped). Open screens do not refresh when a journal day downloads (same known issue as check-ins).

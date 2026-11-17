@@ -1,0 +1,272 @@
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show DateFormat;
+
+import '../../l10n/l10n.dart';
+import '../Theme/WithMeTheme.dart';
+import 'ScenicKit.dart';
+import 'ScenicScaffold.dart';
+import 'WithMeCharts.dart' show dateLocale;
+
+/// What a day was marked with. The legend on `image6.png` names exactly four.
+enum DayMark { checkIn, exercise, feelingBetter, challenging }
+
+extension DayMarkInfo on DayMark {
+  Color get color => switch (this) {
+    DayMark.checkIn => WithMeColors.mint,
+    DayMark.exercise => WithMeColors.peach,
+    DayMark.feelingBetter => WithMeColors.coral,
+    DayMark.challenging => WithMeColors.pink,
+  };
+
+  /// The mark's name on the legend, in [l]'s language.
+  String labelIn(AppLocalizations l) => switch (this) {
+    DayMark.checkIn => l.dashMarkCheckIn,
+    DayMark.exercise => l.dashMarkExercise,
+    DayMark.feelingBetter => l.dashMarkFeelingBetter,
+    DayMark.challenging => l.dashMarkChallenging,
+  };
+
+  /// The marks that read as dark enough to need a white numeral.
+  bool get needsLightInk =>
+      this == DayMark.feelingBetter || this == DayMark.challenging;
+}
+
+/// The month grid (`image6.png`), on the check-in's cream panel.
+///
+/// A plain 7 x 6 of square cells with a circular fill behind a marked day.
+/// Today is ringed in heavy teal with a bold numeral; a selected day that
+/// is not today gets a thinner dark ring, so the two never read alike.
+class MonthCalendar extends StatelessWidget {
+  /// The key on today's cell in the month grid.
+  static const Key todayKey = ValueKey('calendar-today');
+
+  const MonthCalendar({
+    super.key,
+    required this.month,
+    required this.marks,
+    this.selected,
+    this.onSelect,
+    this.onMonthChanged,
+  });
+
+  /// Any date inside the month to show.
+  final DateTime month;
+
+  /// Marked days, keyed by day-of-month.
+  final Map<int, DayMark> marks;
+
+  final DateTime? selected;
+  final ValueChanged<DateTime>? onSelect;
+  final ValueChanged<DateTime>? onMonthChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = dateLocale(context);
+    final first = DateTime(month.year, month.month, 1);
+    final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
+    final daysInPrev = DateTime(month.year, month.month, 0).day;
+    // DateTime.weekday is 1 = Monday; the design starts the week on Sunday.
+    final leading = first.weekday % 7;
+    final today = DateTime.now();
+
+    return ScenicPanel(
+      padding: const EdgeInsets.fromLTRB(10, 16, 10, 12),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              _Chevron(
+                icon: Icons.chevron_left_rounded,
+                onTap: () => onMonthChanged?.call(
+                  DateTime(month.year, month.month - 1, 1),
+                ),
+              ),
+              // One line in every language and text size: a long month
+              // name ("noviembre de 2026" at Extra large) shrinks a little
+              // instead of wrapping and pushing the calendar down.
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: ScenicHeading(
+                    DateFormat.yMMMM(locale).format(month),
+                    size: 21,
+                  ),
+                ),
+              ),
+              _Chevron(
+                icon: Icons.chevron_right_rounded,
+                onTap: () => onMonthChanged?.call(
+                  DateTime(month.year, month.month + 1, 1),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: WithMeSpace.md),
+          Row(
+            children: [
+              // Sunday first, as the grid: S M T W T F S.
+              for (var i = 0; i < 7; i++)
+                Expanded(
+                  child: Text(
+                    DateFormat(
+                      'ccccc',
+                      locale,
+                    ).format(DateTime(2023, 1, 1 + i)),
+                    textAlign: TextAlign.center,
+                    style: kScenicLabel.copyWith(fontSize: 13),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: WithMeSpace.sm),
+          for (var week = 0; week < 6; week++)
+            Row(
+              children: [
+                for (var col = 0; col < 7; col++)
+                  Expanded(
+                    child: _cell(
+                      index: week * 7 + col,
+                      leading: leading,
+                      daysInMonth: daysInMonth,
+                      daysInPrev: daysInPrev,
+                      today: today,
+                    ),
+                  ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _cell({
+    required int index,
+    required int leading,
+    required int daysInMonth,
+    required int daysInPrev,
+    required DateTime today,
+  }) {
+    final dayNumber = index - leading + 1;
+    final inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
+
+    // Spill-over days from the neighbouring months are shown greyed, as in
+    // the mockup's first and last rows.
+    final shown = inMonth
+        ? dayNumber
+        : (dayNumber < 1 ? daysInPrev + dayNumber : dayNumber - daysInMonth);
+
+    final mark = inMonth ? marks[dayNumber] : null;
+    final isToday =
+        inMonth &&
+        today.year == month.year &&
+        today.month == month.month &&
+        today.day == dayNumber;
+    final isSelected =
+        inMonth &&
+        selected != null &&
+        selected!.year == month.year &&
+        selected!.month == month.month &&
+        selected!.day == dayNumber;
+
+    final ink = !inMonth
+        ? WithMeColors.inkFaint.withValues(alpha: 0.7)
+        : mark != null && mark.needsLightInk
+        ? Colors.white
+        : ScenicColors.ink;
+
+    return GestureDetector(
+      // Today's own cell, so tests can find it even when the same number
+      // also shows greyed in a neighbouring month's spill-over row.
+      key: isToday ? MonthCalendar.todayKey : null,
+      onTap: inMonth && onSelect != null
+          ? () => onSelect!(DateTime(month.year, month.month, dayNumber))
+          : null,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        height: 38,
+        child: Center(
+          child: Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color:
+                  mark?.color ??
+                  (isSelected ? ScenicColors.tileSelected : null),
+              border: isToday
+                  ? Border.all(color: ScenicColors.pillBottom, width: 2.6)
+                  : isSelected
+                  ? Border.all(color: ScenicColors.ink, width: 1.6)
+                  : null,
+            ),
+            child: Text(
+              '$shown',
+              style: TextStyle(
+                fontFamily: WithMeText.ui,
+                fontSize: 15,
+                fontWeight: isToday ? FontWeight.w800 : FontWeight.w600,
+                color: ink,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Chevron extends StatelessWidget {
+  const _Chevron({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+    onTap: onTap,
+    behavior: HitTestBehavior.opaque,
+    child: SizedBox(
+      width: 40,
+      height: 40,
+      child: Icon(icon, size: 28, color: ScenicColors.pillBottom),
+    ),
+  );
+}
+
+/// The four-row key under the calendar.
+class CalendarLegend extends StatelessWidget {
+  const CalendarLegend({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ScenicPanel(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final mark in DayMark.values)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  Container(
+                    width: 18,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: mark.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: WithMeSpace.md),
+                  Text(
+                    mark.labelIn(context.l10n),
+                    style: kScenicBody.copyWith(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

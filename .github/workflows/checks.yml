@@ -1,0 +1,88 @@
+# Runs on every pull request into develop (and every push to develop).
+# A red mark on the PR means: do not merge yet.
+name: Checks
+
+on:
+  pull_request:
+    branches: [develop]
+  push:
+    branches: [develop]
+
+jobs:
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: with_me
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # The tests use this machine's SQLite on Linux (see hooks in
+      # pubspec.yaml): the downloaded copy kept failing its check on 9 Nov.
+      - name: SQLite for the tests
+        run: sudo apt-get install -y libsqlite3-dev
+
+      - name: Get packages
+        run: flutter pub get
+
+      # One code style for everyone, so diffs show real changes only.
+      # Fix locally with: dart format lib test
+      - name: Formatting
+        run: dart format --output=none --set-exit-if-changed lib test
+
+      # Code problems. Only real errors fail for now; the older warnings
+      # are listed in the log so they can be cleaned up over time.
+      # On failure, each error is also added as a note on the check (file,
+      # line and message), so it can be read without the whole log.
+      - name: Analyze
+        run: |
+          flutter analyze --no-fatal-infos --no-fatal-warnings || {
+            dart analyze --format=machine . 2>/dev/null \
+              | awk -F'|' '$1=="ERROR" {printf "::error file=%s,line=%s,col=%s::%s\n", $4, $5, $6, $8}'
+            exit 1
+          }
+
+      # Each failing test also becomes a note on the check, with its name
+      # and the start of its error, so a failure can be read without
+      # downloading the whole log.
+      - name: Tests
+        run: |
+          flutter test --reporter github --file-reporter json:test-results.json || {
+            python3 ../.github/scripts/failed_tests.py test-results.json
+            exit 1
+          }
+
+      # The reminder times again in New York time, so the daylight saving
+      # cases cross a real change (graded core E1, E3; 8 Mar and 1 Nov 2026).
+      - name: Reminder times in New York time
+        env:
+          TZ: America/New_York
+        run: flutter test --reporter github test/notice_times_test.dart
+
+      # Size check: the biggest files the app ships with. Not a pass/fail,
+      # a number to watch in every review (big media makes the app slow to
+      # download and start).
+      - name: Size of app files
+        run: |
+          echo "Total assets:"; du -sh assets
+          echo "Largest 15 files:"
+          find assets -type f -printf '%s\t%p\n' | sort -nr | head -15 \
+            | awk -F'\t' '{printf "%8.1f KB  %s\n", $1/1024, $2}'
+
+  # The server's purchase rules (supabase/functions/verify_purchase).
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Purchase rules
+        run: deno test supabase/functions/verify_purchase/decide_test.ts
+      - name: Server function types
+        run: deno check supabase/functions/verify_purchase/index.ts

@@ -1,0 +1,296 @@
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'Config/supabase_config.dart';
+
+import 'Database/DemoAccount.dart';
+import 'Repositories/app_repositories.dart';
+import 'Repositories/free_tries.dart';
+import 'Repositories/sync_service.dart';
+import 'Repositories/user_repository.dart';
+
+import 'Repositories/phone_notifications.dart';
+import 'Repositories/reminder_service.dart';
+import 'WithMe/Data/Today.dart';
+import 'WithMe/Data/weekly_insights.dart';
+import 'WithMe/Locale/AppLanguage.dart';
+import 'WithMe/Screens/AboutScreen.dart';
+import 'WithMe/Screens/BeforeWeStartScreen.dart';
+import 'WithMe/Screens/BreathingScreen.dart';
+import 'WithMe/Screens/CheckInScreen.dart';
+import 'WithMe/Screens/CreateAccountScreen.dart';
+import 'WithMe/Screens/DailyCheckInScreen.dart';
+import 'WithMe/Screens/DashboardScreen.dart';
+import 'WithMe/Screens/ExerciseChooseScreen.dart';
+import 'WithMe/Screens/HelpScreen.dart';
+import 'WithMe/Screens/HomeScreen.dart';
+import 'WithMe/Screens/LoginScreen.dart';
+import 'WithMe/Screens/LogsScreen.dart';
+import 'WithMe/Screens/MembershipScreen.dart';
+import 'WithMe/Screens/MenuScreen.dart';
+import 'WithMe/Screens/MonthlyCalendarScreen.dart';
+import 'WithMe/Screens/NotificationsScreen.dart';
+import 'WithMe/Screens/OutsideLogin.dart';
+import 'WithMe/Screens/ProfileScreen.dart';
+import 'WithMe/Screens/ProgressScreen.dart';
+import 'WithMe/Screens/ReminderScreen.dart';
+import 'WithMe/Screens/ResetPasswordScreen.dart';
+import 'WithMe/Screens/SettingsScreen.dart';
+import 'WithMe/Screens/StrategiesActionsScreen.dart';
+import 'WithMe/Screens/TriggersSignsScreen.dart';
+import 'WithMe/Screens/WelcomeScreen.dart';
+import 'WithMe/Settings/CompanionPlus.dart';
+import 'WithMe/Settings/PlusCheckout.dart';
+import 'WithMe/Settings/FreeUses.dart';
+import 'WithMe/Screens/YourDayScreen.dart';
+import 'WithMe/Speech/SpeechService.dart';
+import 'WithMe/Speech/VoiceDownloads.dart';
+import 'WithMe/Theme/AppFeel.dart';
+import 'WithMe/Theme/SoftSounds.dart';
+import 'WithMe/Theme/WithMeTheme.dart';
+import 'l10n/app_localizations.dart';
+
+/// Whether this week's mood can be compared with last week's (feature F,
+/// GRADED_CORE section 5): the weekly summary notice waits for it.
+Future<bool> weeklyInsightReady() async {
+  final today = Today.now();
+  final moods = await AppRepositories.checkIns.moodsBetween(
+    DateTime(today.year, today.month, today.day - 13),
+    today,
+  );
+  return moodTrend(moodsByDay: moods, today: today) != MoodTrend.notEnough;
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Online accounts. This only reads the saved login from the phone; it does
+  // not need the internet, so the app still opens offline.
+  try {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      anonKey: SupabaseConfig.publishableKey,
+    );
+  } catch (e) {
+    debugPrint('Online accounts not available: $e');
+  }
+
+  // Someone who signed in (or chose to go without an account) last time goes
+  // straight to Home. Reading this opens the database, which the first
+  // screen would do anyway. If it fails or is slow (the browser loads its
+  // database engine first), start at the welcome screen.
+  var signedIn = false;
+  try {
+    signedIn =
+        await AppRepositories.users.session().timeout(
+          const Duration(seconds: 3),
+        ) !=
+        SessionKind.none;
+  } catch (e) {
+    debugPrint('Could not read who is signed in: $e');
+  }
+
+  // Whether the companion reads aloud. Read before the first screen so a
+  // saved "off" holds from the start; until it is read, nothing is spoken.
+  try {
+    await Future.wait([
+      SpeechService.instance.load(),
+      SpeechService.findRecordings(),
+      VoiceDownloads.instance.load(),
+    ]).timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint('Read aloud setting not loaded yet: $e');
+  }
+
+  // With Me Plus and the free tries. Until they are read (or if that
+  // fails), no Plus. Free tries are read again when a sync brings the
+  // account's or a log out removes them.
+  FreeTries.changes.addListener(() => unawaited(FreeUses.instance.load()));
+  // With Me Plus comes from the account (plus_access): asked again after
+  // every sync, and after a log in, log out or deleted account.
+  SyncService.synced.addListener(
+    () => unawaited(CompanionPlus.instance.refresh()),
+  );
+  FreeTries.changes.addListener(
+    () => unawaited(CompanionPlus.instance.refresh()),
+  );
+  // Google Play purchases (stage B, option A): listened to from the start,
+  // and asked for again on every app start and every log in or out.
+  PlusCheckout.instance.start();
+  FreeTries.changes.addListener(
+    () => unawaited(PlusCheckout.instance.recheck()),
+  );
+  try {
+    await Future.wait([
+      CompanionPlus.instance.load(),
+      FreeUses.instance.load(),
+    ]).timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint('Membership settings not loaded yet: $e');
+  }
+  unawaited(PlusCheckout.instance.recheck());
+
+  // The language picked in Settings, read before the first screen so it
+  // never opens in the wrong language. Until it is read (or if it fails),
+  // the device's language is used.
+  try {
+    await AppLanguage.instance.load().timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint('Language setting not loaded yet: $e');
+  }
+
+  // Text size and haptics, read before the first screen so the text does
+  // not change size after it opens. Until read, Default and on.
+  try {
+    await AppFeel.instance.load().timeout(const Duration(seconds: 3));
+  } catch (e) {
+    debugPrint('Text size and haptics not loaded yet: $e');
+  }
+  // The soft tap and chime (Settings, Soft sounds). Tests keep the silent one.
+  AppFeel.instance.sounds = PhoneSoftSounds();
+
+  // The database is not wiped on launch — the logs have to survive a restart.
+  if (DemoAccount.enabled) {
+    // Not awaited: the welcome screen should not wait on seeding.
+    // Signing in takes long enough that the rows are there first, and a
+    // failure here must never keep the app from starting.
+    unawaited(
+      DemoAccount.ensure().catchError(
+        (Object e) => debugPrint('Demo account not seeded: $e'),
+      ),
+    );
+  }
+  runApp(WithMeApp(signedIn: signedIn));
+
+  // Sync now, when the app comes back to the front, and after each
+  // check-in. It does nothing for guests or while offline.
+  SyncTriggers.start(AppRepositories.sync);
+
+  // Reminders on the phone (feature E). Phones only: the web and desktop
+  // builds cannot schedule them reliably, so they keep the empty layer.
+  if (PhoneNotifications.supported) {
+    AppRepositories.reminders = ReminderService(
+      layer: PhoneNotifications(
+        // The notice text follows the language the app shows.
+        words: () => lookupAppLocalizations(
+          AppLanguage.instance.value ??
+              AppLanguage.resolve(
+                WidgetsBinding.instance.platformDispatcher.locales,
+              ),
+        ),
+      ),
+      settings: AppRepositories.settings,
+      checkIns: AppRepositories.checkIns,
+      exercises: AppRepositories.exercises,
+      // The weekly summary (E3) goes out only when the Progress screen's
+      // weekly insight has enough check-ins to say something (feature F).
+      weeklyFactsReady: weeklyInsightReady,
+    );
+  }
+  ReminderTriggers.start(AppRepositories.reminders);
+}
+
+/// With Me.
+///
+/// The app is now the design in `WITH ME Complete App Design V1.docx` end to
+/// end, so the theme lives here rather than being re-applied per screen, and
+/// the entry route is the welcome screen (`image1.png`) rather than the old
+/// HOWRU.LIFE login.
+class WithMeApp extends StatelessWidget {
+  const WithMeApp({super.key, this.signedIn = false});
+
+  /// True when someone is already using the app (signed in or without an
+  /// account), so it opens on Home instead of the welcome screen.
+  final bool signedIn;
+
+  /// Lets logins from email links and Google open the right screen.
+  static final GlobalKey<NavigatorState> navigatorKey =
+      GlobalKey<NavigatorState>();
+
+  @override
+  Widget build(BuildContext context) {
+    // Rebuilt when the language changes in Settings, so every screen
+    // switches at once, with no restart.
+    return ValueListenableBuilder<Locale?>(
+      valueListenable: AppLanguage.instance,
+      builder: (context, chosen, _) => _app(chosen),
+    );
+  }
+
+  Widget _app(Locale? chosen) {
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      // The text size picked in Settings, for every screen at once, and
+      // the listener that finishes logins from the deep link (stage 3).
+      builder: (context, child) => AppTextSize(
+        child: OutsideLoginListener(
+          navigatorKey: navigatorKey,
+          child: child ?? const SizedBox.shrink(),
+        ),
+      ),
+      debugShowCheckedModeBanner: false,
+      onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
+      theme: buildWithMeTheme(),
+      // The picked language, or the device's when none was picked (English
+      // when the app does not have the device's language).
+      locale: chosen,
+      supportedLocales: AppLanguage.supported,
+      localeListResolutionCallback: (device, _) => AppLanguage.resolve(device),
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      // One first screen, chosen above. (initialRoute '/home' would put the
+      // welcome screen underneath it, and Back would land there.)
+      onGenerateInitialRoutes: (_) => [
+        MaterialPageRoute(
+          builder: (_) =>
+              signedIn ? const WithMeHomeScreen() : const WelcomeScreen(),
+        ),
+      ],
+      routes: {
+        // Onboarding — image1 to image4
+        WelcomeScreen.route: (_) => const WelcomeScreen(),
+        CreateAccountScreen.route: (_) => const CreateAccountScreen(),
+        WithMeLoginScreen.route: (_) => const WithMeLoginScreen(),
+        ResetPasswordScreen.route: (_) => const ResetPasswordScreen(),
+        ProfileScreen.route: (_) => const ProfileScreen(),
+
+        // Home and calendar — image5, image6
+        WithMeHomeScreen.route: (_) => const WithMeHomeScreen(),
+        MonthlyCalendarScreen.route: (_) => const MonthlyCalendarScreen(),
+
+        // The check-in — image7 to image24
+        CheckInScreen.route: (_) => const CheckInScreen(),
+        DailyCheckInScreen.route: (_) => const DailyCheckInScreen(),
+
+        // Exercises — image25 to image31
+        ExerciseChooseScreen.route: (_) => const ExerciseChooseScreen(),
+        BeforeWeStartScreen.route: (_) => const BeforeWeStartScreen(),
+        BreathingScreen.route: (_) => const BreathingScreen(),
+
+        // Dashboard — image32 to image39
+        DashboardScreen.route: (_) => const DashboardScreen(),
+        TriggersSignsScreen.route: (_) => const TriggersSignsScreen(),
+        StrategiesActionsScreen.route: (_) => const StrategiesActionsScreen(),
+        YourDayScreen.route: (_) => const YourDayScreen(),
+        ProgressScreen.route: (_) => const ProgressScreen(),
+        ReminderScreen.route: (_) => const ReminderScreen(),
+
+        // Menu and settings — image40 to image45
+        MenuScreen.route: (_) => const MenuScreen(),
+        SettingsScreen.route: (_) => const SettingsScreen(),
+        NotificationsScreen.route: (_) => const NotificationsScreen(),
+        MembershipScreen.route: (_) => const MembershipScreen(),
+        WithMeAboutScreen.route: (_) => const WithMeAboutScreen(),
+        HelpScreen.route: (_) => const HelpScreen(),
+        LogsScreen.route: (_) => const LogsScreen(),
+      },
+    );
+  }
+}

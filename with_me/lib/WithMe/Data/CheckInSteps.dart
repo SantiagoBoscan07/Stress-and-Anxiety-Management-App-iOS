@@ -1,0 +1,356 @@
+import 'package:flutter/material.dart';
+
+import '../../Repositories/journal_prompts.dart';
+import '../Theme/WithMeTheme.dart';
+
+export '../../Repositories/journal_prompts.dart' show kReflectionPrompts;
+
+/// The check-in, as data.
+///
+/// The V1 design walks 18 screens (`image7.png` through `image24.png`). The
+/// wording below is transcribed from those mockups verbatim — including the
+/// reassurance lines, which are part of the design's voice, not filler.
+
+/// One answer option with its category colour.
+class StepOption {
+  const StepOption(this.label, this.color);
+
+  final String label;
+  final Color color;
+}
+
+/// The four dimensions the framework explores, in the order `image15.png`
+/// lists them.
+enum SignDimension { body, feelings, mind, behaviour }
+
+extension SignDimensionInfo on SignDimension {
+  String get label => switch (this) {
+    SignDimension.body => 'BODY',
+    SignDimension.feelings => 'FEELINGS',
+    SignDimension.mind => 'MIND',
+    SignDimension.behaviour => 'BEHAVIOR',
+  };
+
+  Color get color => switch (this) {
+    SignDimension.body => WithMeColors.mint,
+    SignDimension.feelings => WithMeColors.pink,
+    SignDimension.mind => WithMeColors.peach,
+    SignDimension.behaviour => WithMeColors.coral,
+  };
+
+  String get question => switch (this) {
+    SignDimension.body => 'How is stress showing up in your body?',
+    SignDimension.feelings => 'What emotions are you feeling most right now?',
+    SignDimension.mind => 'What thoughts are coming up for you?',
+    SignDimension.behaviour => 'How is it affecting your behavior?',
+  };
+
+  List<StepOption> get options => switch (this) {
+    SignDimension.body => kBodySigns,
+    SignDimension.feelings => kFeelingSigns,
+    SignDimension.mind => kMindSigns,
+    SignDimension.behaviour => kBehaviourSigns,
+  };
+}
+
+/// The rotation of dot colours the design uses down an option list
+/// (`image16`-`image19`): peach, coral, pink, mint, teal, then grey for
+/// "Other".
+const List<Color> _dots = [
+  WithMeColors.peach,
+  WithMeColors.coral,
+  WithMeColors.pink,
+  WithMeColors.mint,
+  WithMeColors.teal,
+  WithMeColors.slate,
+];
+
+List<StepOption> _list(List<String> labels) => [
+  for (var i = 0; i < labels.length; i++)
+    StepOption(labels[i], _dots[i % _dots.length]),
+];
+
+// --- image16 - image19 ------------------------------------------------------
+// Five each. The "Other" button these pages used to end with is now a
+// written "Other" field under the choices (see [CheckInAnswers.signOther]).
+
+final List<StepOption> kBodySigns = _list([
+  'Tension',
+  'Headaches',
+  'Sleep issues',
+  'Low energy',
+  'Stomach issues',
+]);
+
+final List<StepOption> kFeelingSigns = _list([
+  'Anxious',
+  'Overwhelmed',
+  'Frustrated',
+  'Sad',
+  'Angry',
+]);
+
+final List<StepOption> kMindSigns = _list([
+  'Racing thoughts',
+  "Can't focus",
+  'Negative thoughts',
+  'Worrying',
+  'Self-doubt',
+]);
+
+final List<StepOption> kBehaviourSigns = _list([
+  'Avoiding tasks',
+  'Procrastinating',
+  'Overeating',
+  'Withdrawing',
+  'Overworking',
+]);
+
+// --- image10 ----------------------------------------------------------------
+
+/// Where the stress is coming from, two-up. There is no written "Other":
+/// one of these four is the answer.
+const List<StepOption> kStressAreas = [
+  StepOption('Home', WithMeColors.mint),
+  StepOption('Work', WithMeColors.peach),
+  StepOption('School', WithMeColors.pink),
+  StepOption('Social', WithMeColors.coral),
+];
+
+// --- image11 - image14 ------------------------------------------------------
+
+/// The per-area stressor sets, three-up. Keyed by the area labels above.
+/// Each page also has a written "Other" field under its six choices.
+final Map<String, List<StepOption>> kStressorsByArea = {
+  'Work': _list([
+    'Colleagues',
+    'Boss',
+    'Employees',
+    'Workload',
+    'Time mgmt',
+    'Environment',
+  ]),
+  'Home': _list([
+    'Partner',
+    'Family',
+    'In-laws',
+    'Financial',
+    'Domestic duties',
+    'Sickness',
+  ]),
+  'School': _list([
+    'Homework',
+    'Exam pressure',
+    'Organization',
+    'Bullying',
+    'Performance',
+    'Financial',
+  ]),
+  'Social': _list([
+    'Social media',
+    'Traffic',
+    'Isolation',
+    'Friends',
+    'Disputes',
+    'Sports performance',
+  ]),
+};
+
+// --- image20 ----------------------------------------------------------------
+
+final List<StepOption> kIntentions = _list([
+  'Feel calmer',
+  'Be more in control',
+  'Improve my focus',
+  'Be kinder to myself',
+  'Take small steps',
+]);
+
+// --- image21 ----------------------------------------------------------------
+
+/// The eight areas of wellness the product owner chose (6 Nov 2026), each
+/// with five actions. Saved in English and shown in the reader's language;
+/// people can add their own actions to any of them (not strategies).
+const List<String> kStrategies = [
+  'Emotional',
+  'Physical',
+  'Social',
+  'Spiritual',
+  'Intellectual',
+  'Occupational',
+  'Financial',
+  'Environmental',
+];
+
+/// Actions offered per strategy, in the product owner's order.
+const Map<String, List<String>> kActionsByStrategy = {
+  'Emotional': [
+    'Physiological sigh / breathing',
+    'Journaling feelings',
+    'Gratitude exercise',
+    'Talk to someone you trust',
+    'Practice self-compassion',
+  ],
+  'Physical': [
+    '10-minute walk',
+    'Stretching',
+    'Improve sleep routine',
+    'Hydration',
+    'Healthy meal planning',
+  ],
+  'Social': [
+    'Call a friend',
+    'Ask for help',
+    'Spend time with family',
+    'Join a group',
+    'Set healthy boundaries',
+  ],
+  'Spiritual': [
+    'Meditation',
+    'Prayer or reflection',
+    'Spend time in nature',
+    'Identify personal values',
+    'Practice mindfulness',
+  ],
+  'Intellectual': [
+    'Learn something new',
+    'Read a book',
+    'Creative activities',
+    'Solve a puzzle',
+    'Explore a new skill',
+  ],
+  'Occupational': [
+    'Prioritize tasks',
+    'Take breaks',
+    'Delegate',
+    'Clarify expectations',
+    'Set work-life boundaries',
+  ],
+  'Financial': [
+    'Review your budget',
+    'Create a savings goal',
+    'Organize expenses',
+    'Make an action plan',
+    'Seek financial guidance',
+  ],
+  'Environmental': [
+    'Declutter your space',
+    'Reduce noise',
+    'Spend time outdoors',
+    'Create a relaxing corner',
+    'Reduce screen time',
+  ],
+};
+
+/// The longest action a person can add (the online table allows 200).
+const int kOwnActionMaxLength = 100;
+
+// --- image24 ----------------------------------------------------------------
+
+// The five reflection prompts (kReflectionPrompts) now live in
+// lib/Repositories/journal_prompts.dart, because sync uses them too: only
+// these questions are ever sent online. Exported above.
+// --- image25, image26 -------------------------------------------------------
+
+/// Immediate exercises (`image25.png`).
+const List<(String, String, Color)> kExercises = [
+  ('De-stress Your Day', '4 · 4 · 4 · 4 breathing', WithMeColors.mint),
+  ('Ease Your Sleep', '4 · 7 · 8 breathing', WithMeColors.peach),
+  ('Strengthen Your Focus', '4 · 4 · 4 breathing', WithMeColors.pink),
+  (
+    'Physiological Sigh',
+    'Deep inhale · quick inhale · exhale',
+    WithMeColors.slate,
+  ),
+];
+
+/// The longest a written "Other" answer may be, in characters. Answers are
+/// one line and trimmed; blank or whitespace-only text counts as no answer.
+const int kOtherMaxLength = 100;
+
+/// [text] trimmed, or null when nothing but whitespace is left.
+String? cleanOther(String? text) {
+  final t = text?.trim();
+  if (t == null || t.isEmpty) return null;
+  return t.length > kOtherMaxLength ? t.substring(0, kOtherMaxLength) : t;
+}
+
+/// Everything the user picked during one check-in.
+///
+/// Persisted through `CheckInRepository` (lib/Repositories) — mood, control gauge,
+/// stressor and reflection all already have tables.
+///
+/// Answers live here for the whole visit, so going back and forward keeps
+/// them. Each area's stressors and written "Other", and each signs page's
+/// picks and "Other", are kept apart; only the area and signs page finally
+/// chosen are saved.
+class CheckInAnswers {
+  /// The day's feeling, as an index into `MoodFace.values`.
+  int? mood;
+
+  /// "How in control do you feel today?", 1-5. Null until the user picks a
+  /// value; there is no default.
+  int? control;
+  int? stress;
+  int? motivation;
+  String? area;
+
+  /// Stressors picked on each area's page, by area.
+  final Map<String, Set<String>> stressorsByArea = {
+    for (final area in kStressorsByArea.keys) area: <String>{},
+  };
+
+  /// The written "Other" on each area's stressor page, as typed.
+  final Map<String, String> stressorOtherByArea = {
+    for (final area in kStressorsByArea.keys) area: '',
+  };
+
+  final Map<SignDimension, Set<String>> signs = {
+    for (final d in SignDimension.values) d: <String>{},
+  };
+
+  /// The written "Other" on each signs page, as typed.
+  final Map<SignDimension, String> signOther = {
+    for (final d in SignDimension.values) d: '',
+  };
+
+  /// Which of body, feelings, mind or behaviour the user chose to look at.
+  /// Only that one dimension's page follows.
+  SignDimension? signDimension;
+
+  /// 0 (not ready) to 1 (very ready) on the intention-to-change dial.
+  double? readiness;
+
+  /// The dial's reading in words - "Somewhat ready".
+  String? intention;
+  String? strategy;
+  String? action;
+  int rating = 0;
+  final Map<String, String?> reflection = {
+    for (final key in kReflectionPrompts.keys) key: null,
+  };
+
+  /// The stressors picked for the chosen area (none without an area).
+  Set<String> get stressors =>
+      area == null ? <String>{} : stressorsByArea[area]!;
+
+  /// The chosen area's written "Other", trimmed, or null.
+  String? get stressorOther =>
+      area == null ? null : cleanOther(stressorOtherByArea[area]);
+
+  /// Whether the stress-source page is answered: one of the four areas.
+  bool get hasSource => area != null;
+
+  /// Whether the chosen area's stressor page is answered: a pick, a written
+  /// "Other", or both.
+  bool get hasStressors => stressors.isNotEmpty || stressorOther != null;
+
+  /// Whether the chosen signs page is answered, the same way.
+  bool get hasSigns {
+    final d = signDimension;
+    if (d == null) return false;
+    return signs[d]!.isNotEmpty || cleanOther(signOther[d]) != null;
+  }
+
+  bool get isEmpty => mood == null && stress == null && motivation == null;
+}

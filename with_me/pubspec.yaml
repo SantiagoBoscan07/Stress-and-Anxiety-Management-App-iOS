@@ -1,0 +1,221 @@
+name: with_me
+description: "With Me, an animated companion for a daily wellbeing check-in."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+3
+
+environment:
+  sdk: ^3.9.2
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+  # Translations: the generated AppLocalizations, dates and plurals.
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  video_player: ^2.14.0
+  audioplayers: ^6.5.1
+  cupertino_icons: ^1.0.8
+  # SQLite for local database
+  sqflite: ^2.3.0
+
+  # Provides access to device paths for storing the database
+  path_provider: ^2.0.15
+  path: ^1.8.3
+  table_calendar: ^3.0.9
+  sqflite_common_ffi_web: ^1.2.0
+  # Online accounts and (later) sync. Supabase's official Flutter package.
+  supabase_flutter: ^2.8.0
+  # "Export my data": hands the file to the phone's share menu.
+  share_plus: ^10.1.0
+  # Read aloud: the phone's text-to-speech voice (Alex).
+  flutter_tts: ^4.2.5
+  # Reminders (feature E): notices scheduled on the phone itself, with the
+  # phone's time zone so a 9:00 reminder stays at 9:00.
+  flutter_local_notifications: ^22.3.3
+  timezone: ^0.11.0
+  flutter_timezone: ^5.1.1
+  # With Me Plus is bought through Google Play (stage B of the payments
+  # plan). The Android part is named too, to read each plan's base plan id.
+  # in_app_purchase_android 0.5.5 uses Google Play Billing Library 9.1;
+  # Google Play requires 8 or later for new apps and updates.
+  in_app_purchase: ^3.3.0
+  in_app_purchase_android: ^0.5.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # Test-only. Gives sqflite a real engine under `flutter test`, so the
+  # golden screens can render their empty state instead of throwing.
+  sqflite_common_ffi: ^2.3.3
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+# The sqlite3 package (used by the tests through sqflite_common_ffi)
+# normally downloads a ready-made SQLite library. On 9 Nov 2026 that
+# download kept failing its fingerprint check on GitHub's Linux machines,
+# so on Linux the tests use the machine's own SQLite instead (the checks
+# file installs libsqlite3-dev). Windows and macOS still download as
+# before. A Linux developer needs libsqlite3-dev too. Phones are not
+# affected: the app uses sqflite, which uses the phone's SQLite.
+hooks:
+  user_defines:
+    sqlite3:
+      source:
+        linux: system
+        default: sqlite3
+
+flutter:
+  # Builds AppLocalizations from lib/l10n/*.arb (see l10n.yaml).
+  generate: true
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  assets:
+    - assets/audio/
+    - assets/audio/voice/en/checkin/
+    - assets/audio/voice/en/home/
+    - assets/audio/voice/en/meditation/
+    - assets/audio/voice/en/bodyscan/
+    - assets/audio/voice/en/muscle/
+    - assets/audio/voice/en/meditate/sos/
+    - assets/audio/voice/es/checkin/
+    - assets/audio/voice/es/home/
+    - assets/audio/voice/es/meditation/
+    - assets/audio/voice/es/bodyscan/
+    - assets/audio/voice/es/muscle/
+    - assets/audio/voice/es/meditate/sos/
+    - assets/audio/voice/hi/checkin/
+    - assets/audio/voice/hi/home/
+    - assets/audio/voice/ar/checkin/
+    - assets/audio/voice/ar/home/
+    - assets/audio/voice/ar/meditation/
+    - assets/audio/voice/ar/bodyscan/
+    - assets/audio/voice/ar/muscle/
+    - assets/audio/voice/ar/meditate/sos/
+    - assets/audio/voice/fr/checkin/
+    - assets/audio/voice/fr/home/
+    - assets/audio/voice/fr/meditation/
+    - assets/audio/voice/fr/bodyscan/
+    - assets/audio/voice/fr/muscle/
+    - assets/audio/voice/fr/meditate/sos/
+    - assets/audio/voice/pt/checkin/
+    - assets/audio/voice/pt/home/
+    - assets/audio/voice/pt/meditation/
+    - assets/audio/voice/pt/bodyscan/
+    - assets/audio/voice/pt/muscle/
+    - assets/audio/voice/pt/meditate/sos/
+    - assets/audio/voice/ru/checkin/
+    - assets/audio/voice/ru/home/
+    - assets/audio/voice/ru/meditation/
+    - assets/audio/voice/ru/bodyscan/
+    - assets/audio/voice/ru/muscle/
+    - assets/audio/voice/ru/meditate/sos/
+    - assets/audio/voice/ja/checkin/
+    - assets/audio/voice/ja/home/
+    - assets/audio/voice/ja/meditation/
+    - assets/audio/voice/ja/bodyscan/
+    - assets/audio/voice/ja/muscle/
+    - assets/audio/voice/ja/meditate/sos/
+    - assets/audio/voice/zh/checkin/
+    - assets/audio/voice/zh/home/
+    - assets/audio/voice/zh/meditation/
+    - assets/audio/voice/zh/bodyscan/
+    - assets/audio/voice/zh/muscle/
+    - assets/audio/voice/zh/meditate/sos/
+    - assets/audio/voice/de/checkin/
+    - assets/audio/voice/de/home/
+    - assets/audio/voice/de/meditation/
+    - assets/audio/voice/de/bodyscan/
+    - assets/audio/voice/de/muscle/
+    - assets/audio/voice/de/meditate/sos/
+    - assets/audio/voice/tr/checkin/
+    - assets/audio/voice/tr/home/
+    - assets/audio/voice/tr/meditation/
+    - assets/audio/voice/tr/bodyscan/
+    - assets/audio/voice/tr/muscle/
+    - assets/audio/voice/tr/meditate/sos/
+    - assets/audio/voice/sw/checkin/
+    - assets/audio/voice/sw/home/
+    - assets/audio/voice/sw/meditation/
+    - assets/audio/voice/sw/bodyscan/
+    - assets/audio/voice/sw/muscle/
+    - assets/audio/voice/sw/meditate/sos/
+    - assets/audio/voice/ko/checkin/
+    - assets/audio/voice/ko/home/
+    - assets/audio/voice/ko/meditation/
+    - assets/audio/voice/ko/bodyscan/
+    - assets/audio/voice/ko/muscle/
+    - assets/audio/voice/ko/meditate/sos/
+    - assets/video/
+    - assets/v2/app/
+  #   - images/a_dot_ham.jpeg
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # Both faces are provisional - the design document names no fonts, so these
+  # were identified from the renders. See docs/WITH_ME_SPEC_V1.md. Quicksand is
+  # shipped as static instances cut from the upstream variable font.
+  fonts:
+    - family: Quicksand
+      fonts:
+        - asset: assets/fonts/Quicksand-400.ttf
+          weight: 400
+        - asset: assets/fonts/Quicksand-500.ttf
+          weight: 500
+        - asset: assets/fonts/Quicksand-600.ttf
+          weight: 600
+        - asset: assets/fonts/Quicksand-700.ttf
+          weight: 700
+    - family: Yellowtail
+      fonts:
+        - asset: assets/fonts/Yellowtail-Regular.ttf
+
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
